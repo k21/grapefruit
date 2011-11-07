@@ -6,6 +6,7 @@
 static struct nfa* new_nfa() {
 	struct nfa* res = malloc(sizeof(struct nfa));
 	res->exits.head = res->exits.tail = 0;
+	res->node_count = 0;
 	return res;
 }
 
@@ -53,6 +54,7 @@ static struct nfa* new_range_nfa(char min, char max) {
 	struct nfa* res = new_nfa();
 	res->start = node;
 	list_push(&res->exits, edge);
+	res->node_count = 1;
 	return res;
 }
 
@@ -66,6 +68,7 @@ struct nfa* build_nfa(struct syntree* tree) {
 			set_exits(&t1->exits, t2->start);
 			list_free(&t1->exits);
 			t1->exits = t2->exits;
+			t1->node_count += t2->node_count;
 			free(t2);
 			return t1;
 		case ALTER:
@@ -73,6 +76,7 @@ struct nfa* build_nfa(struct syntree* tree) {
 			t2 = build_nfa(tree->alter.option2);
 			add_exits(t1, &t2->exits);
 			add_edges(t1->start, &t2->start->edges);
+			t1->node_count += t2->node_count-1;
 			free(t2->start);
 			free(t2);
 			return t1;

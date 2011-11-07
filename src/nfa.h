@@ -17,6 +17,7 @@ struct nfa_edge {
 struct nfa {
 	struct nfa_node* start;
 	struct list exits;
+	int node_count;
 };
 
 void free_nfa(struct nfa* nfa);
