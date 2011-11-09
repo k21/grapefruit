@@ -2,7 +2,7 @@
 
 #include "list.h"
 
-static struct list_node* new_node() {
+static struct list_node* new_node(void) {
 	return malloc(sizeof(struct list_node));
 }
 

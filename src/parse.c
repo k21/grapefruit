@@ -3,7 +3,7 @@
 
 #include "parse.h"
 
-static struct syntree* new_syntree() {
+static struct syntree* new_syntree(void) {
 	return malloc(sizeof(struct syntree));
 }
 

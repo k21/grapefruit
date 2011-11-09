@@ -11,7 +11,7 @@ struct list {
 	struct list_node* tail;
 };
 
-struct list* new_list();
+struct list* new_list(void);
 void list_push(struct list* list, void* what);
 void list_purge(struct list* list);
 void list_clear(struct list* list);

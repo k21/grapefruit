@@ -3,20 +3,20 @@
 #include "build_nfa.h"
 #include "list.h"
 
-static struct nfa* new_nfa() {
+static struct nfa* new_nfa(void) {
 	struct nfa* res = malloc(sizeof(struct nfa));
 	res->exits.head = res->exits.tail = 0;
 	res->node_count = 0;
 	return res;
 }
 
-static struct nfa_node* new_nfa_node() {
+static struct nfa_node* new_nfa_node(void) {
 	struct nfa_node* res = malloc(sizeof(struct nfa_node));
 	res->edges.head = res->edges.tail = 0;
 	return res;
 }
 
-static struct nfa_edge* new_nfa_edge() {
+static struct nfa_edge* new_nfa_edge(void) {
 	return malloc(sizeof(struct nfa_edge));
 }
 
