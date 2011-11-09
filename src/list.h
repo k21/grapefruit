@@ -14,6 +14,6 @@ struct list {
 struct list* new_list();
 void list_push(struct list* list, void* what);
 void list_purge(struct list* list);
-void list_free(struct list* list);
+void list_clear(struct list* list);
 
 #endif // NEGREP_LIST_H_

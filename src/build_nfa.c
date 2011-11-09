@@ -66,7 +66,7 @@ struct nfa* build_nfa(struct syntree* tree) {
 			t1 = build_nfa(tree->concat.part1);
 			t2 = build_nfa(tree->concat.part2);
 			set_exits(&t1->exits, t2->start);
-			list_free(&t1->exits);
+			list_clear(&t1->exits);
 			t1->exits = t2->exits;
 			t1->node_count += t2->node_count;
 			free(t2);

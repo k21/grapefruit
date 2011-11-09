@@ -19,7 +19,7 @@ static void collect(struct nfa_node* node, struct list* list) {
 }
 
 void free_nfa(struct nfa* nfa) {
-	list_free(&nfa->exits);
+	list_clear(&nfa->exits);
 	struct list* list = new_list();
 	list_push(list, nfa);
 	collect(nfa->start, list);

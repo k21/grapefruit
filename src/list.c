@@ -34,7 +34,7 @@ void list_purge(struct list* list) {
 	}
 }
 
-void list_free(struct list* list) {
+void list_clear(struct list* list) {
 	struct list_node* node = list->head;
 	struct list_node* next;
 	while (node) {
@@ -42,4 +42,5 @@ void list_free(struct list* list) {
 		free(node);
 		node = next;
 	}
+	list->head = list->tail = 0;
 }
