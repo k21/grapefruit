@@ -12,8 +12,10 @@ struct list {
 };
 
 struct list* new_list(void);
-void list_push(struct list* list, void* what);
+void list_push_back(struct list* list, void* what);
+void* list_pop_front(struct list* list);
 void list_purge(struct list* list);
 void list_clear(struct list* list);
+void list_join(struct list* l1, struct list* l2);
 
 #endif // NEGREP_LIST_H_
