@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.67])
 AC_INIT([negrep], [0.0])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -21,7 +21,7 @@ AC_CONFIG_FILES([
 	src/Makefile
 ])
 
-CFLAGS="-Wall -Wextra"
+CFLAGS="-Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wredundant-decls -Wpointer-arith"
 
 AC_MSG_CHECKING(whether to enable debugging)
 AC_ARG_ENABLE(debug,
