@@ -6,6 +6,7 @@
 #include "list.h"
 
 struct nfa_node {
+	int id;
 	union {
 		struct nfa_edge** edges;
 		struct list edges_list;

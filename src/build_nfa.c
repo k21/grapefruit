@@ -13,6 +13,7 @@ static struct nfa* new_nfa(void) {
 
 static struct nfa_node* new_nfa_node(void) {
 	struct nfa_node* res = malloc(sizeof(struct nfa_node));
+	res->id = -1;
 	res->edges_list.head = res->edges_list.tail = 0;
 	res->edge_count = 0;
 	return res;
@@ -108,6 +109,7 @@ struct nfa* build_nfa(struct syntree* tree) {
 	int i;
 	for (i = 0; i < nfa->node_count; ++i) {
 		struct nfa_node* node = nfa->nodes[i];
+		node->id = i;
 		struct nfa_edge** edges = malloc(node->edge_count * sizeof(void*));
 		copy_list_to_array(&node->edges_list, (void**)edges);
 		list_clear(&node->edges_list);
