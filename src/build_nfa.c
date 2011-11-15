@@ -52,14 +52,10 @@ static struct nfa_node* start(struct nfa* nfa) {
 }
 
 static struct nfa* build_nfa_impl(struct syntree* tree) {
-	struct nfa* t1;
-	struct nfa* t2;
-	struct nfa_node* start1;
-	struct nfa_node* start2;
 	switch (tree->type) {
-		case CONCAT:
-			t1 = build_nfa_impl(tree->concat.part1);
-			t2 = build_nfa_impl(tree->concat.part2);
+		case CONCAT: {
+			struct nfa* t1 = build_nfa_impl(tree->concat.part1);
+			struct nfa* t2 = build_nfa_impl(tree->concat.part2);
 			set_exits(&t1->exits, start(t2));
 			list_clear(&t1->exits);
 			t1->exits = t2->exits;
@@ -67,12 +63,13 @@ static struct nfa* build_nfa_impl(struct syntree* tree) {
 			t1->node_count += t2->node_count;
 			free(t2);
 			return t1;
-		case ALTER:
-			t1 = build_nfa_impl(tree->alter.option1);
-			t2 = build_nfa_impl(tree->alter.option2);
+		}
+		case ALTER: {
+			struct nfa* t1 = build_nfa_impl(tree->alter.option1);
+			struct nfa* t2 = build_nfa_impl(tree->alter.option2);
+			struct nfa_node* start1 = start(t1);
+			struct nfa_node* start2 = start(t2);
 			list_join(&t1->exits, &t2->exits);
-			start1 = start(t1);
-			start2 = start(t2);
 			list_join(&start1->edges_list, &start2->edges_list);
 			start1->edge_count += start2->edge_count;
 			list_pop_front(&t2->nodes_list);
@@ -81,6 +78,7 @@ static struct nfa* build_nfa_impl(struct syntree* tree) {
 			free(start2);
 			free(t2);
 			return t1;
+		}
 		case REPEAT:
 			
 			//TODO
