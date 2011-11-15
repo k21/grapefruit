@@ -47,6 +47,10 @@ static struct nfa* new_range_nfa(char min, char max) {
 	return res;
 }
 
+static struct nfa* new_empty_nfa(void) {
+	return new_range_nfa(1, 0);
+}
+
 static struct nfa_node* start(struct nfa* nfa) {
 	return nfa->nodes_list.head->ptr;
 }
@@ -85,6 +89,8 @@ static struct nfa* build_nfa_impl(struct syntree* tree) {
 			break;
 		case RANGE:
 			return new_range_nfa(tree->range.min, tree->range.max);
+		case EMPTY:
+			return new_empty_nfa();
 	}
 	return 0;
 }

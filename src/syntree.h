@@ -2,7 +2,7 @@
 #define NEGREP_SYNTREE_H_
 
 enum syntree_type {
-	CONCAT, ALTER, REPEAT, RANGE
+	CONCAT, ALTER, REPEAT, RANGE, EMPTY
 };
 
 struct syntree_concat {

@@ -23,8 +23,11 @@ static void sim_node(struct nfa_node* node, bool* active, int node_count, char c
 	int i;
 	for (i = 0; i < node->edge_count; ++i) {
 		struct nfa_edge* edge = node->edges[i];
-		if (chr < edge->min || chr > edge->max) continue;
 		struct nfa_node* dest = edge->destination;
+		if (edge->min && !edge->max && dest) {
+			sim_node(dest, active, node_count, chr);
+		}
+		else if (chr < edge->min || chr > edge->max) continue;
 		if (dest) {
 			active[dest->id] = true;
 		} else {

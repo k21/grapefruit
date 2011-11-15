@@ -18,7 +18,7 @@ void free_tree(struct syntree* tree) {
 			free_tree(tree->repeat.repeated);
 			free(tree);
 			break;
-		case RANGE:
+		case RANGE: case EMPTY:
 			free(tree);
 			break;
 	}

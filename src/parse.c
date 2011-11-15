@@ -37,9 +37,15 @@ static struct syntree* repetition(struct syntree* repeated, int min, int max) {
 	return res;
 }
 
+static struct syntree* empty_syntree(void) {
+	struct syntree* res = new_syntree();
+	res->type = EMPTY;
+	return res;
+}
+
 static int parse_impl(char* re, int len, struct syntree** result) {
 	struct syntree* last = 0;
-	struct syntree* option = 0;
+	struct syntree* option = empty_syntree();
 	*result = 0;
 	int i;
 	bool done = false;
@@ -61,10 +67,10 @@ static int parse_impl(char* re, int len, struct syntree** result) {
 				option = concatenation(option, last);
 				last = 0;
 				*result = alternation(*result, option);
-				option = 0;
+				option = empty_syntree();
 				break;
 			case '?':
-				//TODO alternation with empty regex
+				last = alternation(last, empty_syntree());
 				break;
 			case '*':
 				if (!last) {
