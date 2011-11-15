@@ -63,6 +63,9 @@ static int parse_impl(char* re, int len, struct syntree** result) {
 				*result = alternation(*result, option);
 				option = 0;
 				break;
+			case '?':
+				//TODO alternation with empty regex
+				break;
 			case '*':
 				if (!last) {
 					//TODO error
