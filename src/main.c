@@ -6,6 +6,7 @@
 #include "nfa.h"
 #include "parse.h"
 #include "syntree.h"
+#include "sim.h"
 
 int main(int argc, char** argv) {
 	if (argc != 2) {
@@ -17,6 +18,14 @@ int main(int argc, char** argv) {
 	struct nfa* nfa;
 	nfa = build_nfa(tree);
 	free_tree(tree);
+	struct sim_state* state = sim_init(nfa);
+	char* data = "abcdefgh";
+	int i;
+	for (i = 0; i < 8; ++i) {
+		sim_step(state, data[i], !i);
+	}
+	printf(sim_is_match(state) ? "match\n" : "no match\n");
+	free_sim_state(state);
 	free_nfa(nfa);
 	return 0;
 }
