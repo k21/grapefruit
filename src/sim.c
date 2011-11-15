@@ -2,7 +2,7 @@
 
 #include "sim.h"
 
-static struct sim_state* new_state() {
+static struct sim_state* new_state(void) {
 	return malloc(sizeof(struct sim_state));
 }
 
