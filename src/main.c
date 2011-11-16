@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 	char* data = "abcdefgh";
 	int i;
 	for (i = 0; i < 8; ++i) {
-		sim_step(state, data[i], !i);
+		sim_step(state, data[i], false);
 	}
 	printf(sim_is_match(state) ? "match\n" : "no match\n");
 	free_sim_state(state);
