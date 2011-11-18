@@ -9,7 +9,11 @@ static struct syntree* new_syntree(void) {
 
 static struct syntree* alternation(struct syntree* opt1, struct syntree* opt2) {
 	if (!opt1) return opt2;
-	else if (!opt2) return opt1;
+	if (!opt2) return opt1;
+	if (opt1->type == EMPTY && opt2->type == EMPTY) {
+		free_tree(opt2);
+		return opt1;
+	}
 	struct syntree* res = new_syntree();
 	res->type = ALTER;
 	res->alter.option1 = opt1;
@@ -19,7 +23,15 @@ static struct syntree* alternation(struct syntree* opt1, struct syntree* opt2) {
 
 static struct syntree* concatenation(struct syntree* part1, struct syntree* part2) {
 	if (!part1) return part2;
-	else if (!part2) return part1;
+	if (!part2) return part1;
+	if (part1->type == EMPTY) {
+		free_tree(part1);
+		return part2;
+	}
+	if (part2->type == EMPTY) {
+		free_tree(part2);
+		return part1;
+	}
 	struct syntree* res = new_syntree();
 	res->type = CONCAT;
 	res->concat.part1 = part1;
@@ -29,6 +41,7 @@ static struct syntree* concatenation(struct syntree* part1, struct syntree* part
 
 static struct syntree* repetition(struct syntree* repeated, int min, int max) {
 	if (!repeated) return 0;
+	if (repeated->type == EMPTY) return repeated;
 	struct syntree* res = new_syntree();
 	res->type = REPEAT;
 	res->repeat.repeated = repeated;
