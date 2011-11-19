@@ -124,6 +124,86 @@ static int class_syntree(char* re, int len, int i, struct syntree** result) {
 	return end;
 }
 
+static int escaped_syntree(char* re, int len, int begin,
+		struct syntree** result) {
+	if (begin >= len) {
+		die(1, 0, "Incomplete escape sequence at position %d", begin);
+	}
+	char ch;
+	int end = begin;
+	switch (re[begin]) {
+		case '(': case ')': case '|': case '?': case '*': case '+':
+		case '{': case '}': case '[': case ']': case '.': case '\\':
+		case '\'': case '"':
+			ch = re[begin];
+			break;
+		case 'a': ch = 7; break;
+		case 'b': ch = 8; break;
+		case 'f': ch = 12; break;
+		case 'n': ch = 10; break;
+		case 'r': ch = 13; break;
+		case 't': ch = 9; break;
+		case 'v': ch = 11; break;
+		case 'x':
+			end = begin+2;
+			if (end >= len) {
+				die(1, 0, "Incomplete \\x escape sequence at position %d", begin);
+			}
+			{
+				int code = 0;
+				int i;
+				for (i = 1; i < 3; ++i) {
+					char c = re[begin+i];
+					if (c >= '0' && c <= '9') {
+						c -= '0';
+					} else if (c >= 'a' && c <= 'f') {
+						c -= 'a'-10;
+					} else if (c >= 'A' && c <= 'F') {
+						c -= 'A'-10;
+					} else {
+						die(1, 0, "Invalid character in \\x escape "
+								"sequence at position %d", begin+i+1);
+					}
+					code *= 16;
+					code += c;
+				}
+				if (code > 127) {
+					die(1, 0, "Non-ASCII character escaped at position %d", begin);
+				}
+				ch = code;
+			}
+			break;
+		case '0': case '1': case '2': case '3': case '4':
+		case '5': case '6': case '7': case '8': case '9':
+			end = begin+2;
+			if (end >= len) {
+				die(1, 0, "Incomplete \\000 escape sequence at position %d", begin);
+			}
+			{
+				int code = 0;
+				int i;
+				for (i = 0; i < 3; ++i) {
+					char c = re[begin+i];
+					if (c < '0' || c > '7') {
+						die(1, 0, "Invalid character in \\000 escape "
+								"sequence at position %d", begin+i+1);
+					}
+					code *= 8;
+					code += c-'0';
+				}
+				if (code > 127) {
+					die(1, 0, "Non-ASCII character escaped at position %d", begin);
+				}
+				ch = code;
+			}
+			break;
+		default:
+			die(1, 0, "Invalid escape sequence at position %d", begin);
+	}
+	*result = range_syntree(ch, ch);
+	return end;
+}
+
 static int parse_impl(char* re, int len, int begin, struct syntree** result) {
 	struct syntree* last = empty_syntree();
 	struct syntree* option = empty_syntree();
@@ -168,7 +248,8 @@ static int parse_impl(char* re, int len, int begin, struct syntree** result) {
 				i = class_syntree(re, len, i, &last);
 				break;
 			case '\\':
-				//TODO escaped chars
+				option = concatenation(option, last);
+				i = escaped_syntree(re, len, i+1, &last);
 				break;
 			case '.':
 				option = concatenation(option, last);
