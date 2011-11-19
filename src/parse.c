@@ -239,6 +239,9 @@ static int custom_repetition(char* re, int len, int begin,
 	if (begin >= len) {
 		parse_error(re, begin-1, "Unmatched \"{\"");
 	}
+	if (re[begin] == '}') {
+		parse_error(re, begin-1, "Empty repetition range");
+	}
 	int i = begin;
 	while (re[i] != '}') {
 		++i;
