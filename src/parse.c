@@ -65,6 +65,65 @@ static struct syntree* empty_syntree(void) {
 	return res;
 }
 
+static int class_syntree(char* re, int len, int i, struct syntree** result) {
+	if (i+1 >= len) {
+		die(1, 0, "Missing \"]\" for \"[\" at position %d", i+1);
+	}
+	++i;
+	int begin = i;
+	while (i == begin || re[i] != ']') {
+		++i;
+		if (i >= len) {
+			die(1, 0, "Missing \"]\" for \"[\" at position %d", begin+1);
+		}
+	}
+	int end = i;
+	bool invert = false;
+	if (re[begin] == '^') {
+		invert = true;
+		++begin;
+	}
+	int j;
+	bool in_class[129] = {0};
+	for (j = begin; j < end; ++j) {
+		char ch = re[j];
+		if (j+2 < end && re[j+1] == '-') {
+			j += 2;
+			char ch2 = re[j];
+			if (ch2 < ch) die(1, 0, "Invalid range end at position %d", j+1);
+			while (ch <= ch2) {
+				in_class[(int)ch] = true;
+				++ch;
+			}
+		} else {
+			in_class[(int)ch] = true;
+		}
+	}
+	in_class[129] = invert;
+	*result = 0;
+	int range_start = 0;
+	bool prev_in_class = false;
+	for(j = 0; j < 129; ++j) {
+		if (in_class[j] != invert) {
+			if (!prev_in_class) {
+				prev_in_class = true;
+				range_start = j;
+			}
+		} else {
+			if (prev_in_class) {
+				struct syntree* part = range_syntree(range_start, j-1);
+				if (*result) {
+					*result = alternation(*result, part);
+				} else {
+					*result = part;
+				}
+				prev_in_class = false;
+			}
+		}
+	}
+	return end;
+}
+
 static int parse_impl(char* re, int len, struct syntree** result) {
 	struct syntree* last = 0;
 	struct syntree* option = empty_syntree();
@@ -110,7 +169,8 @@ static int parse_impl(char* re, int len, struct syntree** result) {
 				//TODO custom repetitions
 				break;
 			case '[':
-				//TODO range
+				option = concatenation(option, last);
+				i = class_syntree(re, len, i, &last);
 				break;
 			case '\\':
 				//TODO escaped chars
