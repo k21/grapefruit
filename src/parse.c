@@ -191,14 +191,6 @@ static int parse_impl(char* re, int len, int begin, struct syntree** result) {
 
 struct syntree* parse(char* re, int len) {
 	struct syntree* res;
-	int end = parse_impl(re, len, 0, &res);
-	if (!res) {
-		//TODO
-		return 0;
-	}
-	if (end != len) {
-		//TODO
-		return 0;
-	}
+	parse_impl(re, len, 0, &res);
 	return res;
 }
