@@ -140,6 +140,9 @@ static int parse_impl(char* re, int len, int begin, struct syntree** result) {
 				//TODO check for error
 				break;
 			case ')':
+				if (begin == 0) {
+					die(1, 0, "Unmatched \")\" at position %d", i+1);
+				}
 				done = true;
 				break;
 			case '|':
@@ -177,6 +180,9 @@ static int parse_impl(char* re, int len, int begin, struct syntree** result) {
 				break;
 		}
 		if (done) break;
+	}
+	if (i == len && begin != 0) {
+		die(1, 0, "Unmatched \"(\" at position %d", begin);
 	}
 	option = concatenation(option, last);
 	*result = alternation(*result, option);
