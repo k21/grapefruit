@@ -50,6 +50,14 @@ static struct syntree* repetition(struct syntree* repeated, int min, int max) {
 	return res;
 }
 
+static struct syntree* range_syntree(char min, char max) {
+	struct syntree* res = new_syntree();
+	res->type = RANGE;
+	res->range.min = min;
+	res->range.max = max;
+	return res;
+}
+
 static struct syntree* empty_syntree(void) {
 	struct syntree* res = new_syntree();
 	res->type = EMPTY;
@@ -108,17 +116,11 @@ static int parse_impl(char* re, int len, struct syntree** result) {
 				break;
 			case '.':
 				option = concatenation(option, last);
-				last = new_syntree();
-				last->type = RANGE;
-				last->range.min = 0;
-				last->range.max = 127;
+				last = range_syntree(0, 127);
 				break;
 			default:
 				option = concatenation(option, last);
-				last = new_syntree();
-				last->type = RANGE;
-				last->range.min = ch;
-				last->range.max = ch;
+				last = range_syntree(ch, ch);
 				break;
 		}
 		if (done) break;
