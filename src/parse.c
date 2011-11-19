@@ -125,7 +125,7 @@ static int class_syntree(char* re, int len, int i, struct syntree** result) {
 }
 
 static int parse_impl(char* re, int len, struct syntree** result) {
-	struct syntree* last = 0;
+	struct syntree* last = empty_syntree();
 	struct syntree* option = empty_syntree();
 	*result = 0;
 	int i;
@@ -146,7 +146,7 @@ static int parse_impl(char* re, int len, struct syntree** result) {
 				break;
 			case '|':
 				option = concatenation(option, last);
-				last = 0;
+				last = empty_syntree();
 				*result = alternation(*result, option);
 				option = empty_syntree();
 				break;
@@ -154,15 +154,9 @@ static int parse_impl(char* re, int len, struct syntree** result) {
 				last = alternation(last, empty_syntree());
 				break;
 			case '*':
-				if (!last) {
-					//TODO error
-				}
 				last = repetition(last, 0, -1);
 				break;
 			case '+':
-				if (!last) {
-					//TODO error
-				}
 				last = repetition(last, 1, -1);
 				break;
 			case '{':
