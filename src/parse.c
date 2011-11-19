@@ -99,7 +99,7 @@ static int class_syntree(char* re, int len, int i, struct syntree** result) {
 			in_class[(int)ch] = true;
 		}
 	}
-	in_class[129] = invert;
+	in_class[128] = invert;
 	*result = 0;
 	int range_start = 0;
 	bool prev_in_class = false;
