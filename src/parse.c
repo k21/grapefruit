@@ -204,6 +204,68 @@ static int escaped_syntree(char* re, int len, int begin,
 	return end;
 }
 
+static int parse_number(char* data, int begin, int end, int limit) {
+	int i;
+	int res = 0;
+	for (i = begin; i < end; ++i) {
+		if (data[i] < '0' || data[i] > '9') {
+			die(1, 0, "Invalid numerical character at position %d", i+1);
+		}
+		res *= 10;
+		res += data[i]-'0';
+		if (res > limit) return -1;
+	}
+	return res;
+}
+
+static int custom_repetition(char* re, int len, int begin,
+		struct syntree** last) {
+	if (begin >= len) {
+		die(1, 0, "Unmatched \"{\" at position %d", begin);
+	}
+	int i = begin;
+	while (re[i] != '}') {
+		++i;
+		if (i >= len) {
+			die(1, 0, "Unmatched \"{\" at position %d", begin);
+		}
+	}
+	int end = i;
+	int middle = end;
+	for (i = begin; i < end; ++i) {
+		if (re[i] == ',') {
+			middle = i;
+			break;
+		}
+	}
+	int limit = 10000;
+	char* err_over_limit = "Too many repetitions at position %d "
+			"(> %d)";
+	if (middle == begin) {
+		int max = parse_number(re, middle+1, end, limit);
+		if (max == -1) die(1, 0, err_over_limit, middle+1, limit);
+		*last = repetition(*last, 0, max);
+		return end;
+	} else {
+		int min = parse_number(re, begin, middle, limit);
+		if (min == -1) die(1, 0, err_over_limit, begin, limit);
+		if (middle == end) {
+			*last = repetition(*last, min, min);
+			return end;
+		}
+		if (middle == end-1) {
+			*last = repetition(*last, min, -1);
+			return end;
+		} else {
+			int max = parse_number(re, middle+1, end, limit);
+			if (max == -1) die(1, 0, err_over_limit, middle+1, limit);
+			if (max < min) die(1, 0, "Invalid repetition range at position %d", begin);
+			*last = repetition(*last, min, max);
+			return end;
+		}
+	}
+}
+
 static int parse_impl(char* re, int len, int begin, struct syntree** result) {
 	struct syntree* last = empty_syntree();
 	struct syntree* option = empty_syntree();
@@ -241,7 +303,7 @@ static int parse_impl(char* re, int len, int begin, struct syntree** result) {
 				last = repetition(last, 1, -1);
 				break;
 			case '{':
-				//TODO custom repetitions
+				i = custom_repetition(re, len, i+1, &last);
 				break;
 			case '[':
 				option = concatenation(option, last);
