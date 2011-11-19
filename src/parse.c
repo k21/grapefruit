@@ -1,11 +1,27 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "common.h"
 #include "parse.h"
 
 static struct syntree* new_syntree(void) {
 	return alloc(sizeof(struct syntree));
+}
+
+static void parse_error(char* re, int pos, char* errmsg) {
+	fprintf(stderr, "Pos:   %d\n", pos+1);
+	if (strlen(re) <= 70) {
+		fprintf(stderr, "Regex: %s\n", re);
+		int i;
+		for (i = 0; i < pos+7; ++i) {
+			fputc(' ', stderr);
+		}
+		fputs("^\n", stderr);
+	}
+	fprintf(stderr, "Error: %s\n", errmsg);
+	exit(1);
 }
 
 static struct syntree* alternation(struct syntree* opt1, struct syntree* opt2) {
@@ -67,14 +83,14 @@ static struct syntree* empty_syntree(void) {
 
 static int class_syntree(char* re, int len, int i, struct syntree** result) {
 	if (i+1 >= len) {
-		die(1, 0, "Missing \"]\" for \"[\" at position %d", i+1);
+		parse_error(re, i, "Unmatched \"[\"");
 	}
 	++i;
 	int begin = i;
 	while (i == begin || re[i] != ']') {
 		++i;
 		if (i >= len) {
-			die(1, 0, "Missing \"]\" for \"[\" at position %d", begin+1);
+			parse_error(re, begin-1, "Unmatched \"[\"");
 		}
 	}
 	int end = i;
@@ -90,7 +106,7 @@ static int class_syntree(char* re, int len, int i, struct syntree** result) {
 		if (j+2 < end && re[j+1] == '-') {
 			j += 2;
 			char ch2 = re[j];
-			if (ch2 < ch) die(1, 0, "Invalid range end at position %d", j+1);
+			if (ch2 < ch) parse_error(re, j-1, "Invalid range");
 			while (ch <= ch2) {
 				in_class[(int)ch] = true;
 				++ch;
@@ -127,7 +143,7 @@ static int class_syntree(char* re, int len, int i, struct syntree** result) {
 static int escaped_syntree(char* re, int len, int begin,
 		struct syntree** result) {
 	if (begin >= len) {
-		die(1, 0, "Incomplete escape sequence at position %d", begin);
+		parse_error(re, begin-1, "Incomplete escape sequence");
 	}
 	char ch;
 	int end = begin;
@@ -147,7 +163,7 @@ static int escaped_syntree(char* re, int len, int begin,
 		case 'x':
 			end = begin+2;
 			if (end >= len) {
-				die(1, 0, "Incomplete \\x escape sequence at position %d", begin);
+				parse_error(re, begin, "Incomplete \\x escape sequence");
 			}
 			{
 				int code = 0;
@@ -161,14 +177,14 @@ static int escaped_syntree(char* re, int len, int begin,
 					} else if (c >= 'A' && c <= 'F') {
 						c -= 'A'-10;
 					} else {
-						die(1, 0, "Invalid character in \\x escape "
-								"sequence at position %d", begin+i+1);
+						parse_error(re, begin+i, "Invalid hexadecimal character in \\x "
+								"escape sequence");
 					}
 					code *= 16;
 					code += c;
 				}
 				if (code > 127) {
-					die(1, 0, "Non-ASCII character escaped at position %d", begin);
+					parse_error(re, begin, "Escaped non-ASCII character");
 				}
 				ch = code;
 			}
@@ -177,7 +193,7 @@ static int escaped_syntree(char* re, int len, int begin,
 		case '5': case '6': case '7': case '8': case '9':
 			end = begin+2;
 			if (end >= len) {
-				die(1, 0, "Incomplete \\000 escape sequence at position %d", begin);
+				parse_error(re, begin, "Incomplete \\000 escape sequence");
 			}
 			{
 				int code = 0;
@@ -185,20 +201,20 @@ static int escaped_syntree(char* re, int len, int begin,
 				for (i = 0; i < 3; ++i) {
 					char c = re[begin+i];
 					if (c < '0' || c > '7') {
-						die(1, 0, "Invalid character in \\000 escape "
-								"sequence at position %d", begin+i+1);
+						parse_error(re, begin+i, "Invalid octal character in \\000 "
+								"escape sequence");
 					}
 					code *= 8;
 					code += c-'0';
 				}
 				if (code > 127) {
-					die(1, 0, "Non-ASCII character escaped at position %d", begin);
+					parse_error(re, begin, "Escaped non-ASCII character");
 				}
 				ch = code;
 			}
 			break;
 		default:
-			die(1, 0, "Invalid escape sequence at position %d", begin);
+			parse_error(re, begin, "Unknown escape sequence");
 	}
 	*result = range_syntree(ch, ch);
 	return end;
@@ -209,7 +225,7 @@ static int parse_number(char* data, int begin, int end, int limit) {
 	int res = 0;
 	for (i = begin; i < end; ++i) {
 		if (data[i] < '0' || data[i] > '9') {
-			die(1, 0, "Invalid numerical character at position %d", i+1);
+			parse_error(data, i, "Invalid decimal character");
 		}
 		res *= 10;
 		res += data[i]-'0';
@@ -221,13 +237,13 @@ static int parse_number(char* data, int begin, int end, int limit) {
 static int custom_repetition(char* re, int len, int begin,
 		struct syntree** last) {
 	if (begin >= len) {
-		die(1, 0, "Unmatched \"{\" at position %d", begin);
+		parse_error(re, begin-1, "Unmatched \"{\"");
 	}
 	int i = begin;
 	while (re[i] != '}') {
 		++i;
 		if (i >= len) {
-			die(1, 0, "Unmatched \"{\" at position %d", begin);
+			parse_error(re, begin-1, "Unmatched \"{\"");
 		}
 	}
 	int end = i;
@@ -239,16 +255,16 @@ static int custom_repetition(char* re, int len, int begin,
 		}
 	}
 	int limit = 10000;
-	char* err_over_limit = "Too many repetitions at position %d "
-			"(> %d)";
+	char err_over_limit[100];
+	sprintf(err_over_limit, "Too many repetitions (> %d)", limit);
 	if (middle == begin) {
 		int max = parse_number(re, middle+1, end, limit);
-		if (max == -1) die(1, 0, err_over_limit, middle+1, limit);
+		if (max == -1) parse_error(re, middle+1, err_over_limit);
 		*last = repetition(*last, 0, max);
 		return end;
 	} else {
 		int min = parse_number(re, begin, middle, limit);
-		if (min == -1) die(1, 0, err_over_limit, begin, limit);
+		if (min == -1) parse_error(re, begin, err_over_limit);
 		if (middle == end) {
 			*last = repetition(*last, min, min);
 			return end;
@@ -258,8 +274,8 @@ static int custom_repetition(char* re, int len, int begin,
 			return end;
 		} else {
 			int max = parse_number(re, middle+1, end, limit);
-			if (max == -1) die(1, 0, err_over_limit, middle+1, limit);
-			if (max < min) die(1, 0, "Invalid repetition range at position %d", begin);
+			if (max == -1) parse_error(re, middle+1, err_over_limit);
+			if (max < min) parse_error(re, begin, "Invalid repetition range");
 			*last = repetition(*last, min, max);
 			return end;
 		}
@@ -283,7 +299,7 @@ static int parse_impl(char* re, int len, int begin, struct syntree** result) {
 				break;
 			case ')':
 				if (begin == 0) {
-					die(1, 0, "Unmatched \")\" at position %d", i+1);
+					parse_error(re, i, "Unmatched \")\"");
 				}
 				done = true;
 				break;
@@ -325,7 +341,7 @@ static int parse_impl(char* re, int len, int begin, struct syntree** result) {
 		if (done) break;
 	}
 	if (i == len && begin != 0) {
-		die(1, 0, "Unmatched \"(\" at position %d", begin);
+		parse_error(re, begin-1, "Unmatched \"(\"");
 	}
 	option = concatenation(option, last);
 	*result = alternation(*result, option);
