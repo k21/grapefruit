@@ -1,13 +1,14 @@
 #include <stdlib.h>
 
+#include "common.h"
 #include "list.h"
 
 static struct list_node* new_node(void) {
-	return malloc(sizeof(struct list_node));
+	return alloc(sizeof(struct list_node));
 }
 
 struct list* new_list() {
-	struct list* res = malloc(sizeof(struct list));
+	struct list* res = alloc(sizeof(struct list));
 	res->head = res->tail = 0;
 	return res;
 }

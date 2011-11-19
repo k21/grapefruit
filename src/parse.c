@@ -1,10 +1,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "common.h"
 #include "parse.h"
 
 static struct syntree* new_syntree(void) {
-	return malloc(sizeof(struct syntree));
+	return alloc(sizeof(struct syntree));
 }
 
 static struct syntree* alternation(struct syntree* opt1, struct syntree* opt2) {

@@ -1,9 +1,10 @@
 #include <stdlib.h>
 
+#include "common.h"
 #include "sim.h"
 
 static struct sim_state* new_state(void) {
-	return malloc(sizeof(struct sim_state));
+	return alloc(sizeof(struct sim_state));
 }
 
 static void mark_active(struct nfa_node* node, bool* active, int node_count) {
@@ -27,8 +28,8 @@ static void mark_active(struct nfa_node* node, bool* active, int node_count) {
 struct sim_state* sim_init(struct nfa* nfa) {
 	struct sim_state* state = new_state();
 	state->nfa = nfa;
-	state->active = malloc((nfa->node_count+1)*sizeof(bool));
-	state->prev_active = malloc((nfa->node_count+1)*sizeof(bool));
+	state->active = alloc((nfa->node_count+1)*sizeof(bool));
+	state->prev_active = alloc((nfa->node_count+1)*sizeof(bool));
 	int i;
 	for (i = 0; i < nfa->node_count+1; ++i) {
 		state->active[i] = false;

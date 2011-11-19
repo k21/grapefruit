@@ -1,10 +1,11 @@
 #include <stdlib.h>
 
 #include "build_nfa.h"
+#include "common.h"
 #include "list.h"
 
 static struct nfa* new_nfa(void) {
-	struct nfa* res = malloc(sizeof(struct nfa));
+	struct nfa* res = alloc(sizeof(struct nfa));
 	res->exits.head = res->exits.tail = 0;
 	res->nodes_list.head = res->nodes_list.tail = 0;
 	res->node_count = 0;
@@ -12,7 +13,7 @@ static struct nfa* new_nfa(void) {
 }
 
 static struct nfa_node* new_nfa_node(void) {
-	struct nfa_node* res = malloc(sizeof(struct nfa_node));
+	struct nfa_node* res = alloc(sizeof(struct nfa_node));
 	res->id = -1;
 	res->edges_list.head = res->edges_list.tail = 0;
 	res->edge_count = 0;
@@ -20,7 +21,7 @@ static struct nfa_node* new_nfa_node(void) {
 }
 
 static struct nfa_edge* new_nfa_edge(void) {
-	return malloc(sizeof(struct nfa_edge));
+	return alloc(sizeof(struct nfa_edge));
 }
 
 static void set_exits(struct list* exits, struct nfa_node* to) {
@@ -174,7 +175,7 @@ static void copy_list_to_array(struct list* list, void** array) {
 
 struct nfa* build_nfa(struct syntree* tree) {
 	struct nfa* nfa = build_nfa_impl(tree);
-	struct nfa_node** nodes = malloc(nfa->node_count * sizeof(void*));
+	struct nfa_node** nodes = alloc(nfa->node_count * sizeof(void*));
 	copy_list_to_array(&nfa->nodes_list, (void**)nodes);
 	list_clear(&nfa->nodes_list);
 	nfa->nodes = nodes;
@@ -182,7 +183,7 @@ struct nfa* build_nfa(struct syntree* tree) {
 	for (i = 0; i < nfa->node_count; ++i) {
 		struct nfa_node* node = nfa->nodes[i];
 		node->id = i;
-		struct nfa_edge** edges = malloc(node->edge_count * sizeof(void*));
+		struct nfa_edge** edges = alloc(node->edge_count * sizeof(void*));
 		copy_list_to_array(&node->edges_list, (void**)edges);
 		list_clear(&node->edges_list);
 		node->edges = edges;
