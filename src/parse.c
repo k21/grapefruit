@@ -106,6 +106,13 @@ static int parse_impl(char* re, int len, struct syntree** result) {
 			case '\\':
 				//TODO escaped chars
 				break;
+			case '.':
+				option = concatenation(option, last);
+				last = new_syntree();
+				last->type = RANGE;
+				last->range.min = 0;
+				last->range.max = 127;
+				break;
 			default:
 				option = concatenation(option, last);
 				last = new_syntree();
