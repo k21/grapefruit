@@ -3,6 +3,6 @@
 
 #include "syntree.h"
 
-struct syntree* parse(char* re, int len);
+struct syntree* parse(char* re, uintptr_t len);
 
 #endif // NEGREP_PARSE_H_

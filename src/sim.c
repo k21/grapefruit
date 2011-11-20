@@ -7,14 +7,15 @@ static struct sim_state* new_state(void) {
 	return alloc(sizeof(struct sim_state));
 }
 
-static void mark_active(struct nfa_node* node, bool* active, int node_count) {
+static void mark_active(struct nfa_node* node, bool* active,
+		uintptr_t node_count) {
 	if (!node) {
 		active[node_count] = true;
 		return;
 	}
 	if (active[node->id]) return;
 	active[node->id] = true;
-	int i;
+	uintptr_t i;
 	for (i = 0; i < node->edge_count; ++i) {
 		struct nfa_edge* edge = node->edges[i];
 		struct nfa_node* dest = edge->destination;
@@ -30,7 +31,7 @@ struct sim_state* sim_init(struct nfa* nfa) {
 	state->nfa = nfa;
 	state->active = alloc((nfa->node_count+1)*sizeof(bool));
 	state->prev_active = alloc((nfa->node_count+1)*sizeof(bool));
-	int i;
+	uintptr_t i;
 	for (i = 0; i < nfa->node_count+1; ++i) {
 		state->active[i] = false;
 		state->prev_active[i] = false;
@@ -39,8 +40,9 @@ struct sim_state* sim_init(struct nfa* nfa) {
 	return state;
 }
 
-static void sim_node(struct nfa_node* node, bool* active, int node_count, char chr) {
-	int i;
+static void sim_node(struct nfa_node* node, bool* active,
+		uintptr_t node_count, uint_fast8_t chr) {
+	uintptr_t i;
 	for (i = 0; i < node->edge_count; ++i) {
 		struct nfa_edge* edge = node->edges[i];
 		if (chr >= edge->min && chr <= edge->max) {
@@ -50,12 +52,12 @@ static void sim_node(struct nfa_node* node, bool* active, int node_count, char c
 	}
 }
 
-void sim_step(struct sim_state* state, char chr, bool start) {
+void sim_step(struct sim_state* state, uint_fast8_t chr, bool start) {
 	struct nfa* nfa = state->nfa;
 	bool* t = state->prev_active;
 	state->prev_active = state->active;
 	state->active = t;
-	int i;
+	uintptr_t i;
 	for (i = 0; i < nfa->node_count+1; ++i) {
 		state->active[i] = false;
 	}

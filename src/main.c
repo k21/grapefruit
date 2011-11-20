@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
 	free_tree(tree);
 	struct sim_state* state = sim_init(nfa);
 	char* data = "abcdefgh";
-	int i;
+	uintptr_t i;
 	for (i = 0; i < 8; ++i) {
 		sim_step(state, data[i], false);
 	}

@@ -1,6 +1,8 @@
 #ifndef NEGREP_SYNTREE_H_
 #define NEGREP_SYNTREE_H_
 
+#include <stdint.h>
+
 enum syntree_type {
 	CONCAT, ALTER, REPEAT, RANGE, EMPTY
 };
@@ -16,14 +18,14 @@ struct syntree_alter {
 };
 
 struct syntree_repeat {
-	int min;
-	int max;
+	int_least16_t min;
+	int_least16_t max;
 	struct syntree* repeated;
 };
 
 struct syntree_range {
-	char min;
-	char max;
+	uint_least8_t min;
+	uint_least8_t max;
 };
 
 struct syntree {

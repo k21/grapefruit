@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdlib.h>
 
 #include "build_nfa.h"
@@ -33,7 +34,7 @@ static void set_exits(struct list* exits, struct nfa_node* to) {
 	}
 }
 
-static struct nfa* new_range_nfa(char min, char max) {
+static struct nfa* new_range_nfa(uint_fast8_t min, uint_fast8_t max) {
 	struct nfa_edge* edge = new_nfa_edge();
 	edge->destination = 0;
 	edge->min = min;
@@ -94,7 +95,8 @@ static struct nfa* alter_trees(struct syntree* t1, struct syntree* t2) {
 	return alter_nfas(n1, n2);
 }
 
-static struct nfa* repeat_tree(struct syntree* repeated, int min, int max) {
+static struct nfa* repeat_tree(struct syntree* repeated,
+		int_fast16_t min, int_fast16_t max) {
 	struct nfa* res = 0;
 	while (min > 1) {
 		if (!res) {
@@ -166,7 +168,7 @@ static struct nfa* build_nfa_impl(struct syntree* tree) {
 
 static void copy_list_to_array(struct list* list, void** array) {
 	struct list_node* node = list->head;
-	int i = 0;
+	uintptr_t i = 0;
 	while (node) {
 		array[i++] = node->ptr;
 		node = node->next;
@@ -179,7 +181,7 @@ struct nfa* build_nfa(struct syntree* tree) {
 	copy_list_to_array(&nfa->nodes_list, (void**)nodes);
 	list_clear(&nfa->nodes_list);
 	nfa->nodes = nodes;
-	int i;
+	uintptr_t i;
 	for (i = 0; i < nfa->node_count; ++i) {
 		struct nfa_node* node = nfa->nodes[i];
 		node->id = i;

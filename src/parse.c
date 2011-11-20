@@ -1,4 +1,6 @@
+#include <inttypes.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,11 +12,11 @@ static struct syntree* new_syntree(void) {
 	return alloc(sizeof(struct syntree));
 }
 
-static void parse_error(char* re, int pos, char* errmsg) {
-	fprintf(stderr, "Pos:   %d\n", pos+1);
+static void parse_error(char* re, uintptr_t pos, char* errmsg) {
+	fprintf(stderr, "Pos:   %"PRIuPTR"\n", pos+1);
 	if (strlen(re) <= 70) {
 		fprintf(stderr, "Regex: %s\n", re);
-		int i;
+		uintptr_t i;
 		for (i = 0; i < pos+7; ++i) {
 			fputc(' ', stderr);
 		}
@@ -56,7 +58,8 @@ static struct syntree* concatenation(struct syntree* part1, struct syntree* part
 	return res;
 }
 
-static struct syntree* repetition(struct syntree* repeated, int min, int max) {
+static struct syntree* repetition(struct syntree* repeated,
+		int_fast16_t min, int_fast16_t max) {
 	if (!repeated) return 0;
 	if (repeated->type == EMPTY) return repeated;
 	struct syntree* res = new_syntree();
@@ -67,7 +70,7 @@ static struct syntree* repetition(struct syntree* repeated, int min, int max) {
 	return res;
 }
 
-static struct syntree* range_syntree(char min, char max) {
+static struct syntree* range_syntree(uint_fast8_t min, uint_fast8_t max) {
 	struct syntree* res = new_syntree();
 	res->type = RANGE;
 	res->range.min = min;
@@ -81,43 +84,44 @@ static struct syntree* empty_syntree(void) {
 	return res;
 }
 
-static int class_syntree(char* re, int len, int i, struct syntree** result) {
+static uintptr_t class_syntree(char* re, uintptr_t len, uintptr_t i,
+		struct syntree** result) {
 	if (i+1 >= len) {
 		parse_error(re, i, "Unmatched \"[\"");
 	}
 	++i;
-	int begin = i;
+	uintptr_t begin = i;
 	while (i == begin || re[i] != ']') {
 		++i;
 		if (i >= len) {
 			parse_error(re, begin-1, "Unmatched \"[\"");
 		}
 	}
-	int end = i;
+	uintptr_t end = i;
 	bool invert = false;
 	if (re[begin] == '^') {
 		invert = true;
 		++begin;
 	}
-	int j;
+	uintptr_t j;
 	bool in_class[129] = {0};
 	for (j = begin; j < end; ++j) {
-		char ch = re[j];
+		uint_fast8_t ch = re[j];
 		if (j+2 < end && re[j+1] == '-') {
 			j += 2;
-			char ch2 = re[j];
+			uint_fast8_t ch2 = re[j];
 			if (ch2 < ch) parse_error(re, j-1, "Invalid range");
 			while (ch <= ch2) {
-				in_class[(int)ch] = true;
+				in_class[(uintptr_t)ch] = true;
 				++ch;
 			}
 		} else {
-			in_class[(int)ch] = true;
+			in_class[(uintptr_t)ch] = true;
 		}
 	}
 	in_class[128] = invert;
 	*result = 0;
-	int range_start = 0;
+	uintptr_t range_start = 0;
 	bool prev_in_class = false;
 	for(j = 0; j < 129; ++j) {
 		if (in_class[j] != invert) {
@@ -140,13 +144,13 @@ static int class_syntree(char* re, int len, int i, struct syntree** result) {
 	return end;
 }
 
-static int escaped_syntree(char* re, int len, int begin,
+static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 		struct syntree** result) {
 	if (begin >= len) {
 		parse_error(re, begin-1, "Incomplete escape sequence");
 	}
-	char ch;
-	int end = begin;
+	uint_fast8_t ch;
+	uintptr_t end = begin;
 	switch (re[begin]) {
 		case '(': case ')': case '|': case '?': case '*': case '+':
 		case '{': case '}': case '[': case ']': case '.': case '\\':
@@ -166,10 +170,10 @@ static int escaped_syntree(char* re, int len, int begin,
 				parse_error(re, begin, "Incomplete \\x escape sequence");
 			}
 			{
-				int code = 0;
-				int i;
+				uint_fast32_t code = 0;
+				uintptr_t i;
 				for (i = 1; i < 3; ++i) {
-					char c = re[begin+i];
+					uint_fast8_t c = re[begin+i];
 					if (c >= '0' && c <= '9') {
 						c -= '0';
 					} else if (c >= 'a' && c <= 'f') {
@@ -196,10 +200,10 @@ static int escaped_syntree(char* re, int len, int begin,
 				parse_error(re, begin, "Incomplete \\000 escape sequence");
 			}
 			{
-				int code = 0;
-				int i;
+				uint_fast32_t code = 0;
+				uintptr_t i;
 				for (i = 0; i < 3; ++i) {
-					char c = re[begin+i];
+					uint_fast8_t c = re[begin+i];
 					if (c < '0' || c > '7') {
 						parse_error(re, begin+i, "Invalid octal character in \\000 "
 								"escape sequence");
@@ -220,9 +224,10 @@ static int escaped_syntree(char* re, int len, int begin,
 	return end;
 }
 
-static int parse_number(char* data, int begin, int end, int limit) {
-	int i;
-	int res = 0;
+static int_fast32_t parse_number(char* data, uintptr_t begin, uintptr_t end,
+		int_fast32_t limit) {
+	uintptr_t i;
+	int_fast32_t res = 0;
 	for (i = begin; i < end; ++i) {
 		if (data[i] < '0' || data[i] > '9') {
 			parse_error(data, i, "Invalid decimal character");
@@ -234,7 +239,7 @@ static int parse_number(char* data, int begin, int end, int limit) {
 	return res;
 }
 
-static int custom_repetition(char* re, int len, int begin,
+static uintptr_t custom_repetition(char* re, uintptr_t len, uintptr_t begin,
 		struct syntree** last) {
 	if (begin >= len) {
 		parse_error(re, begin-1, "Unmatched \"{\"");
@@ -242,31 +247,31 @@ static int custom_repetition(char* re, int len, int begin,
 	if (re[begin] == '}') {
 		parse_error(re, begin-1, "Empty repetition range");
 	}
-	int i = begin;
+	uintptr_t i = begin;
 	while (re[i] != '}') {
 		++i;
 		if (i >= len) {
 			parse_error(re, begin-1, "Unmatched \"{\"");
 		}
 	}
-	int end = i;
-	int middle = end;
+	uintptr_t end = i;
+	uintptr_t middle = end;
 	for (i = begin; i < end; ++i) {
 		if (re[i] == ',') {
 			middle = i;
 			break;
 		}
 	}
-	int limit = 10000;
+	int_fast32_t limit = 10000;
 	char err_over_limit[100];
-	sprintf(err_over_limit, "Too many repetitions (> %d)", limit);
+	sprintf(err_over_limit, "Too many repetitions (> %"PRIdFAST32")", limit);
 	if (middle == begin) {
-		int max = parse_number(re, middle+1, end, limit);
+		int_fast32_t max = parse_number(re, middle+1, end, limit);
 		if (max == -1) parse_error(re, middle+1, err_over_limit);
 		*last = repetition(*last, 0, max);
 		return end;
 	} else {
-		int min = parse_number(re, begin, middle, limit);
+		int_fast32_t min = parse_number(re, begin, middle, limit);
 		if (min == -1) parse_error(re, begin, err_over_limit);
 		if (middle == end) {
 			*last = repetition(*last, min, min);
@@ -276,7 +281,7 @@ static int custom_repetition(char* re, int len, int begin,
 			*last = repetition(*last, min, -1);
 			return end;
 		} else {
-			int max = parse_number(re, middle+1, end, limit);
+			int_fast32_t max = parse_number(re, middle+1, end, limit);
 			if (max == -1) parse_error(re, middle+1, err_over_limit);
 			if (max < min) parse_error(re, begin, "Invalid repetition range");
 			*last = repetition(*last, min, max);
@@ -285,14 +290,15 @@ static int custom_repetition(char* re, int len, int begin,
 	}
 }
 
-static int parse_impl(char* re, int len, int begin, struct syntree** result) {
+static uintptr_t parse_impl(char* re, uintptr_t len, uintptr_t begin,
+		struct syntree** result) {
 	struct syntree* last = empty_syntree();
 	struct syntree* option = empty_syntree();
 	*result = 0;
-	int i;
+	uintptr_t i;
 	bool done = false;
 	for (i = begin; i < len; ++i) {
-		char ch = re[i];
+		uint_fast8_t ch = re[i];
 		switch (ch) {
 			case '(':
 				option = concatenation(option, last);
@@ -351,7 +357,7 @@ static int parse_impl(char* re, int len, int begin, struct syntree** result) {
 	return i;
 }
 
-struct syntree* parse(char* re, int len) {
+struct syntree* parse(char* re, uintptr_t len) {
 	struct syntree* res;
 	parse_impl(re, len, 0, &res);
 	return res;
