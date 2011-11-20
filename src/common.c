@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <error.h>
 
-#include <common.h>
+#include "common.h"
 
 void* alloc_(size_t size, const char* filename, unsigned int linenum) {
 	void* res = malloc(size);
