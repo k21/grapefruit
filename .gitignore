@@ -5,7 +5,7 @@ Makefile.in
 .deps
 *.o
 *.tar.gz
-/src/negrep
+/src/grapefruit
 /aclocal.m4
 /autom4te.cache/
 /autoscan.log

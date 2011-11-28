@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([negrep], [0.0])
+AC_INIT([grapefruit], [0.0])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src])
 AC_CONFIG_HEADERS([config.h])
