@@ -1,0 +1,20 @@
+#ifndef NEGREP_DFS_H_
+#define NEGREP_DFS_H_
+
+#include <stdbool.h>
+
+struct sim_state;
+struct nfa;
+
+struct dfa_state {
+	bool* active;
+	struct dfa_state** edges;
+};
+
+struct dfa_cache;
+
+struct dfa_cache* cache_init(void);
+struct dfa_state* cache_get(struct dfa_cache* cache, struct sim_state* state);
+void free_cache(struct dfa_cache* cache, struct nfa* nfa);
+
+#endif // NEGREP_DFS_H_
