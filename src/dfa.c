@@ -40,6 +40,8 @@ static struct dfa_state* get_impl(struct dfa_cache* cache, bool* active,
 		if (!dfa_state) {
 			dfa_state = new_state(active);
 			cache->data = dfa_state;
+		} else {
+			free(active);
 		}
 		return dfa_state;
 	}
