@@ -15,7 +15,11 @@ struct dfa_cache {
 static struct dfa_cache* new_cache(uintptr_t depth) {
 	struct dfa_cache* res = alloc(sizeof(struct dfa_cache));
 	res->depth = depth;
-	res->child[0] = res->child[1] = 0;
+	if (res->depth == 0) {
+		res->data = 0;
+	} else {
+		res->child[0] = res->child[1] = 0;
+	}
 	return res;
 }
 
@@ -49,9 +53,6 @@ static struct dfa_state* get_impl(struct dfa_cache* cache, bool* active,
 	struct dfa_cache* next = cache->child[next_active];
 	if (!next) {
 		next = new_cache(cache->depth-1);
-		if (next->depth == 0) {
-			next->data = 0;
-		}
 		cache->child[next_active] = next;
 	}
 	return get_impl(next, active, root_depth);
