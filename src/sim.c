@@ -23,20 +23,19 @@ static void mark_active(struct nfa_node* node, bool* active,
 			mark_active(dest, active, node_count);
 		}
 	}
-
 }
 
 struct sim_state* sim_init(struct nfa* nfa) {
 	struct sim_state* state = new_state();
 	state->nfa = nfa;
-	state->active = alloc((nfa->node_count+1)*sizeof(bool));
-	state->prev_active = alloc((nfa->node_count+1)*sizeof(bool));
+	state->cache = cache_init(nfa->node_count+1);
+	state->tmp = alloc(sizeof(bool)*(nfa->node_count+1));
 	uintptr_t i;
 	for (i = 0; i < nfa->node_count+1; ++i) {
-		state->active[i] = false;
-		state->prev_active[i] = false;
+		state->tmp[i] = false;
 	}
-	mark_active(nfa->nodes.array[0], state->active, nfa->node_count);
+	mark_active(nfa->nodes.array[0], state->tmp, nfa->node_count);
+	state->dfa_state = cache_get(state->cache, state->tmp);
 	return state;
 }
 
@@ -52,29 +51,39 @@ static void sim_node(struct nfa_node* node, bool* active,
 	}
 }
 
-void sim_step(struct sim_state* state, uint_fast8_t chr, bool start) {
+static struct dfa_state* compute_dfa(struct sim_state* state,
+		uint_fast8_t chr) {
 	struct nfa* nfa = state->nfa;
-	bool* t = state->prev_active;
-	state->prev_active = state->active;
-	state->active = t;
+	bool* active = state->tmp;
+	bool* prev_active = state->dfa_state->active;
 	uintptr_t i;
 	for (i = 0; i < nfa->node_count+1; ++i) {
-		state->active[i] = false;
+		active[i] = false;
 	}
 	for (i = 0; i < nfa->node_count; ++i) {
-		if (!state->prev_active[i]) continue;
+		if (!prev_active[i]) continue;
 		struct nfa_node* node = nfa->nodes.array[i];
-		sim_node(node, state->active, nfa->node_count, chr);
+		sim_node(node, active, nfa->node_count, chr);
 	}
-	if (start) mark_active(nfa->nodes.array[0], state->active, nfa->node_count);
+	return cache_get(state->cache, active);
+}
+
+void sim_step(struct sim_state* state, uint_fast8_t chr) {
+	struct dfa_state* dfa_state = state->dfa_state;
+	struct dfa_state* next = dfa_state->edges[chr];
+	if (!next) {
+		next = compute_dfa(state, chr);
+		dfa_state->edges[chr] = next;
+	}
+	state->dfa_state = next;
 }
 
 bool sim_is_match(struct sim_state* state) {
-	return state->active[state->nfa->node_count];
+	return state->dfa_state->active[state->nfa->node_count];
 }
 
 void free_sim_state(struct sim_state* state) {
-	free(state->active);
-	free(state->prev_active);
+	free_cache(state->cache);
+	free(state->tmp);
 	free(state);
 }
