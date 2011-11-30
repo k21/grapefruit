@@ -8,7 +8,7 @@ struct nfa;
 
 struct dfa_state {
 	bool* active;
-	struct dfa_state** edges;
+	struct dfa_state* edges[128];
 };
 
 struct dfa_cache;

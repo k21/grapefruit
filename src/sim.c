@@ -35,6 +35,7 @@ struct sim_state* sim_init(struct nfa* nfa) {
 		active[i] = false;
 	}
 	mark_active(nfa->nodes[0], active, nfa->node_count);
+	state->dfa_state = cache_get(state->cache, active);
 	return state;
 }
 
