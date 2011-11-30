@@ -11,6 +11,7 @@ struct sim_state {
 	struct nfa* nfa;
 	struct dfa_state* dfa_state;
 	struct dfa_cache* cache;
+	bool* tmp;
 };
 
 struct sim_state* sim_init(struct nfa* nfa);

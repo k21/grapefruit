@@ -29,13 +29,13 @@ struct sim_state* sim_init(struct nfa* nfa) {
 	struct sim_state* state = new_state();
 	state->nfa = nfa;
 	state->cache = cache_init(nfa->node_count+1);
-	bool* active = alloc(sizeof(bool)*(nfa->node_count+1));
+	state->tmp = alloc(sizeof(bool)*(nfa->node_count+1));
 	uintptr_t i;
 	for (i = 0; i < nfa->node_count+1; ++i) {
-		active[i] = false;
+		state->tmp[i] = false;
 	}
-	mark_active(nfa->nodes[0], active, nfa->node_count);
-	state->dfa_state = cache_get(state->cache, active);
+	mark_active(nfa->nodes[0], state->tmp, nfa->node_count);
+	state->dfa_state = cache_get(state->cache, state->tmp);
 	return state;
 }
 
@@ -54,7 +54,7 @@ static void sim_node(struct nfa_node* node, bool* active,
 static struct dfa_state* compute_dfa(struct sim_state* state,
 		uint_fast8_t chr) {
 	struct nfa* nfa = state->nfa;
-	bool* active = alloc(sizeof(bool)*(nfa->node_count+1));
+	bool* active = state->tmp;
 	bool* prev_active = state->dfa_state->active;
 	uintptr_t i;
 	for (i = 0; i < nfa->node_count+1; ++i) {
@@ -81,5 +81,6 @@ bool sim_is_match(struct sim_state* state) {
 
 void free_sim_state(struct sim_state* state) {
 	free_cache(state->cache);
+	free(state->tmp);
 	free(state);
 }

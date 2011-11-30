@@ -23,12 +23,15 @@ static struct dfa_cache* new_cache(uintptr_t depth) {
 	return res;
 }
 
-static struct dfa_state* new_state(bool* active) {
+static struct dfa_state* new_state(bool* active, uintptr_t active_length) {
 	struct dfa_state* res = alloc(sizeof(struct dfa_state));
-	res->active = active;
-	uint_fast8_t i;
+	uintptr_t i;
 	for (i = 0; i < 128; ++i) {
 		res->edges[i] = 0;
+	}
+	res->active = alloc(sizeof(bool)*active_length);
+	for (i = 0; i < active_length; ++i) {
+		res->active[i] = active[i];
 	}
 	return res;
 }
@@ -42,10 +45,8 @@ static struct dfa_state* get_impl(struct dfa_cache* cache, bool* active,
 	if (cache->depth == 0) {
 		struct dfa_state* dfa_state = cache->data;
 		if (!dfa_state) {
-			dfa_state = new_state(active);
+			dfa_state = new_state(active, root_depth);
 			cache->data = dfa_state;
-		} else {
-			free(active);
 		}
 		return dfa_state;
 	}
