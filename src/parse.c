@@ -35,8 +35,8 @@ static struct syntree* alternation(struct syntree* opt1, struct syntree* opt2) {
 	}
 	struct syntree* res = new_syntree();
 	res->type = ALTER;
-	res->alter.option1 = opt1;
-	res->alter.option2 = opt2;
+	res->data.alter.option1 = opt1;
+	res->data.alter.option2 = opt2;
 	return res;
 }
 
@@ -53,8 +53,8 @@ static struct syntree* concatenation(struct syntree* part1, struct syntree* part
 	}
 	struct syntree* res = new_syntree();
 	res->type = CONCAT;
-	res->concat.part1 = part1;
-	res->concat.part2 = part2;
+	res->data.concat.part1 = part1;
+	res->data.concat.part2 = part2;
 	return res;
 }
 
@@ -64,17 +64,17 @@ static struct syntree* repetition(struct syntree* repeated,
 	if (repeated->type == EMPTY) return repeated;
 	struct syntree* res = new_syntree();
 	res->type = REPEAT;
-	res->repeat.repeated = repeated;
-	res->repeat.min = min;
-	res->repeat.max = max;
+	res->data.repeat.repeated = repeated;
+	res->data.repeat.min = min;
+	res->data.repeat.max = max;
 	return res;
 }
 
 static struct syntree* range_syntree(uint_fast8_t min, uint_fast8_t max) {
 	struct syntree* res = new_syntree();
 	res->type = RANGE;
-	res->range.min = min;
-	res->range.max = max;
+	res->data.range.min = min;
+	res->data.range.max = max;
 	return res;
 }
 

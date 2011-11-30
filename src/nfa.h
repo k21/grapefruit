@@ -9,9 +9,9 @@
 struct nfa_node {
 	intptr_t id;
 	union {
-		struct nfa_edge** edges;
-		struct list edges_list;
-	};
+		struct nfa_edge** array;
+		struct list list;
+	} edges;
 	uintptr_t edge_count;
 };
 
@@ -23,9 +23,9 @@ struct nfa_edge {
 struct nfa {
 	struct list exits;
 	union {
-		struct nfa_node** nodes;
-		struct list nodes_list;
-	};
+		struct nfa_node** array;
+		struct list list;
+	} nodes;
 	uintptr_t node_count;
 };
 
