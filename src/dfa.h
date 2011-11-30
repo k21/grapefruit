@@ -13,8 +13,8 @@ struct dfa_state {
 
 struct dfa_cache;
 
-struct dfa_cache* cache_init(void);
-struct dfa_state* cache_get(struct dfa_cache* cache, struct sim_state* state);
-void free_cache(struct dfa_cache* cache, struct nfa* nfa);
+struct dfa_cache* cache_init(uintptr_t depth);
+struct dfa_state* cache_get(struct dfa_cache* cache, bool* active);
+void free_cache(struct dfa_cache* cache);
 
 #endif // NEGREP_DFS_H_
