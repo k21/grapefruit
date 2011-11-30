@@ -35,7 +35,7 @@ struct syntree {
 		struct syntree_alter alter;
 		struct syntree_repeat repeat;
 		struct syntree_range range;
-	};
+	} data;
 };
 
 void free_tree(struct syntree* tree);

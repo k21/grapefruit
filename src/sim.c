@@ -17,7 +17,7 @@ static void mark_active(struct nfa_node* node, bool* active,
 	active[node->id] = true;
 	uintptr_t i;
 	for (i = 0; i < node->edge_count; ++i) {
-		struct nfa_edge* edge = node->edges[i];
+		struct nfa_edge* edge = node->edges.array[i];
 		struct nfa_node* dest = edge->destination;
 		if (edge->min && !edge->max) {
 			mark_active(dest, active, node_count);
@@ -34,7 +34,7 @@ struct sim_state* sim_init(struct nfa* nfa) {
 	for (i = 0; i < nfa->node_count+1; ++i) {
 		state->tmp[i] = false;
 	}
-	mark_active(nfa->nodes[0], state->tmp, nfa->node_count);
+	mark_active(nfa->nodes.array[0], state->tmp, nfa->node_count);
 	state->dfa_state = cache_get(state->cache, state->tmp);
 	return state;
 }
@@ -43,7 +43,7 @@ static void sim_node(struct nfa_node* node, bool* active,
 		uintptr_t node_count, uint_fast8_t chr) {
 	uintptr_t i;
 	for (i = 0; i < node->edge_count; ++i) {
-		struct nfa_edge* edge = node->edges[i];
+		struct nfa_edge* edge = node->edges.array[i];
 		if (chr >= edge->min && chr <= edge->max) {
 			struct nfa_node* dest = edge->destination;
 			mark_active(dest, active, node_count);
@@ -62,7 +62,7 @@ static struct dfa_state* compute_dfa(struct sim_state* state,
 	}
 	for (i = 0; i < nfa->node_count; ++i) {
 		if (!prev_active[i]) continue;
-		struct nfa_node* node = nfa->nodes[i];
+		struct nfa_node* node = nfa->nodes.array[i];
 		sim_node(node, active, nfa->node_count, chr);
 	}
 	return cache_get(state->cache, active);
