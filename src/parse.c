@@ -13,7 +13,9 @@ static struct syntree* new_syntree(void) {
 }
 
 static void parse_error(char* re, uintptr_t pos, char* errmsg) {
-	fprintf(stderr, "Pos:   %"PRIuPTR"\n", pos+1);
+	fprintf(stderr, "The regular expression could not be parsed!\n\n");
+	fprintf(stderr, "Error: %s\n", errmsg);
+	fprintf(stderr, "  Pos: %"PRIuPTR"\n", pos+1);
 	if (strlen(re) <= 70) {
 		fprintf(stderr, "Regex: %s\n", re);
 		uintptr_t i;
@@ -22,7 +24,6 @@ static void parse_error(char* re, uintptr_t pos, char* errmsg) {
 		}
 		fputs("^\n", stderr);
 	}
-	fprintf(stderr, "Error: %s\n", errmsg);
 	exit(1);
 }
 
@@ -283,7 +284,7 @@ static uintptr_t custom_repetition(char* re, uintptr_t len, uintptr_t begin,
 		} else {
 			int_fast32_t max = parse_number(re, middle+1, end, limit);
 			if (max == -1) parse_error(re, middle+1, err_over_limit);
-			if (max < min) parse_error(re, begin, "Invalid repetition range");
+			if (max < min) parse_error(re, middle, "Invalid repetition range");
 			*last = repetition(*last, min, max);
 			return end;
 		}
