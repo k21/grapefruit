@@ -34,6 +34,7 @@ struct sim_state* sim_init(struct nfa* nfa) {
 	for (i = 0; i < nfa->node_count+1; ++i) {
 		state->tmp[i] = false;
 	}
+	state->empty_state = cache_get(state->cache, state->tmp);
 	mark_active(nfa->nodes.array[0], state->tmp, nfa->node_count);
 	state->dfa_state = cache_get(state->cache, state->tmp);
 	return state;
@@ -69,6 +70,10 @@ static struct dfa_state* compute_dfa(struct sim_state* state,
 }
 
 void sim_step(struct sim_state* state, uint_fast8_t chr) {
+	if (chr > 127) {
+		state->dfa_state = state->empty_state;
+		return;
+	}
 	struct dfa_state* dfa_state = state->dfa_state;
 	struct dfa_state* next = dfa_state->edges[chr];
 	if (!next) {

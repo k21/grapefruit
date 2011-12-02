@@ -359,6 +359,10 @@ static uintptr_t parse_impl(char* re, uintptr_t len, uintptr_t begin,
 }
 
 struct syntree* parse(char* re, uintptr_t len) {
+	uintptr_t i;
+	for (i = 0; i < len; ++i) {
+		if ((uint_fast8_t)re[i] > 127) parse_error(re, i, "Non-ASCII character");
+	}
 	struct syntree* res;
 	parse_impl(re, len, 0, &res);
 	return res;
