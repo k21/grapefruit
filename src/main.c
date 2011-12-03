@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,12 +55,33 @@ static void check_match(struct sim_state* state, struct list* line_parts,
 }
 
 int main(int argc, char** argv) {
-	if (argc != 2) {
-		puts("no regex");
-		return 0;
+	bool invert_match = false;
+	bool match_whole_lines = false;
+	bool match_count = false;
+	while (1) {
+		static struct option long_options[] = {
+			{"invert-match", no_argument, 0, 'v'},
+			{"line-regexp",  no_argument, 0, 'x'},
+			{"count",        no_argument, 0, 'c'},
+			{0, 0, 0, 0}
+		};
+		int option_index = 0;
+		int c = getopt_long(argc, argv, "vxc", long_options, &option_index);
+		if (c == -1) break;
+		switch (c) {
+			case 'v': invert_match = true; break;
+			case 'x': match_whole_lines = true; break;
+			case 'c': match_count = true; break;
+			default: break;
+		}
 	}
+	if (optind != argc-1) {
+		printf("incorrect usage\n"); //TODO print usage / help
+		return 1;
+	}
+	char* regex = argv[optind];
 	struct syntree* tree;
-	tree = parse(argv[1], strlen(argv[1]));
+	tree = parse(regex, strlen(regex));
 	struct nfa* nfa;
 	nfa = build_nfa(tree);
 	free_tree(tree);
