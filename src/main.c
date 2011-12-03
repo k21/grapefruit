@@ -13,19 +13,37 @@
 #include "syntree.h"
 #include "sim.h"
 
+static intptr_t write_all(int fd, char* buffer, uintptr_t size,
+		uintptr_t skip) {
+	uintptr_t written = skip;
+	while (written != size) {
+		intptr_t res = write(fd, buffer+written, size-written);
+		if (res == -1 && errno == EINTR) continue;
+		if (res == -1) return -1;
+		if (res == 0) return written;
+		written += res;
+	}
+	return written;
+}
+
 static void check_match(struct sim_state* state, struct list* line_parts,
 		struct buffer* buffer, int line_start, int i) {
 	if (sim_is_match(state)) {
 		while (line_parts->head) {
 			struct buffer* part = list_pop_front(line_parts);
-			if (line_start < part->full) {
-				write(STDOUT_FILENO, part->data+line_start, part->full-line_start);
+			intptr_t res = write_all(STDOUT_FILENO, part->data,
+				part->full, line_start);
+			if (res != part->full) {
+				die(1, (res == -1) ? errno : 0, "Error writing to stdout");
 			}
-			//TODO writeall, check
 			free_buffer(part);
 			line_start = 0;
 		}
-		write(STDOUT_FILENO, buffer->data+line_start, i+1-line_start);
+		intptr_t res;
+		res = write_all(STDOUT_FILENO, buffer->data, i+1, line_start);
+		if (res != i+1) {
+			die(1, (res == -1) ? errno : 0, "Error writing to stdout");
+		}
 	} else {
 		while (line_parts->head) {
 			struct buffer* part = list_pop_front(line_parts);
