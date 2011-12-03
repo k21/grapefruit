@@ -57,7 +57,7 @@ static void check_match(struct sim_state* state, struct list* line_parts,
 int main(int argc, char** argv) {
 	bool invert_match = false;
 	bool match_whole_lines = false;
-	bool match_count = false;
+	bool count_matches = false;
 	while (1) {
 		static struct option long_options[] = {
 			{"invert-match", no_argument, 0, 'v'},
@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
 		switch (c) {
 			case 'v': invert_match = true; break;
 			case 'x': match_whole_lines = true; break;
-			case 'c': match_count = true; break;
+			case 'c': count_matches = true; break;
 			default: break;
 		}
 	}
