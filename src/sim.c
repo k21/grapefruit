@@ -25,7 +25,8 @@ static void mark_active(struct nfa_node* node, bool* active,
 	}
 }
 
-struct sim_state* sim_init(struct nfa* nfa) {
+struct sim_state* sim_init(struct nfa* nfa, bool count_matches,
+		bool whole_lines, bool invert_match) {
 	struct sim_state* state = new_state();
 	state->nfa = nfa;
 	state->cache = cache_init(nfa->node_count+1);
@@ -38,6 +39,9 @@ struct sim_state* sim_init(struct nfa* nfa) {
 	mark_active(nfa->nodes.array[0], state->tmp, nfa->node_count);
 	state->start_state = cache_get(state->cache, state->tmp);
 	state->dfa_state = state->start_state;
+	state->count_matches = count_matches;
+	state->whole_lines = whole_lines;
+	state->invert_match = invert_match;
 	return state;
 }
 
@@ -67,15 +71,20 @@ static struct dfa_state* compute_dfa(struct sim_state* state,
 		struct nfa_node* node = nfa->nodes.array[i];
 		sim_node(node, active, nfa->node_count, chr);
 	}
+	if (!state->whole_lines) {
+		mark_active(nfa->nodes.array[0], active, nfa->node_count);
+	}
 	return cache_get(state->cache, active);
 }
 
 void sim_step(struct sim_state* state, uint_fast8_t chr) {
+	struct dfa_state* dfa_state = state->dfa_state;
+	if (!state->whole_lines
+			&& dfa_state->active[state->nfa->node_count]) return;
 	if (chr > 127) {
 		state->dfa_state = state->empty_state;
 		return;
 	}
-	struct dfa_state* dfa_state = state->dfa_state;
 	struct dfa_state* next = dfa_state->edges[chr];
 	if (!next) {
 		next = compute_dfa(state, chr);
@@ -85,7 +94,8 @@ void sim_step(struct sim_state* state, uint_fast8_t chr) {
 }
 
 bool sim_is_match(struct sim_state* state) {
-	return state->dfa_state->active[state->nfa->node_count];
+	bool match = state->dfa_state->active[state->nfa->node_count];
+	return match != state->invert_match;
 }
 
 void free_sim_state(struct sim_state* state) {

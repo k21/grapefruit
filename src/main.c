@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <inttypes.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +28,7 @@ static intptr_t write_all(int fd, char* buffer, uintptr_t size,
 	return written;
 }
 
-static void check_match(struct sim_state* state, struct list* line_parts,
+static void output_match(struct sim_state* state, struct list* line_parts,
 		struct buffer* buffer, int line_start, int i) {
 	if (sim_is_match(state)) {
 		while (line_parts->head) {
@@ -40,10 +41,12 @@ static void check_match(struct sim_state* state, struct list* line_parts,
 			free_buffer(part);
 			line_start = 0;
 		}
-		intptr_t res;
-		res = write_all(STDOUT_FILENO, buffer->data, i+1, line_start);
-		if (res != i+1) {
-			die(1, (res == -1) ? errno : 0, "Error writing to stdout");
+		if (buffer->full != 0) {
+			intptr_t res;
+			res = write_all(STDOUT_FILENO, buffer->data, i+1, line_start);
+			if (res != i+1) {
+				die(1, (res == -1) ? errno : 0, "Error writing to stdout");
+			}
 		}
 	} else {
 		while (line_parts->head) {
@@ -51,12 +54,11 @@ static void check_match(struct sim_state* state, struct list* line_parts,
 			free_buffer(part);
 		}
 	}
-	state->dfa_state = state->start_state;
 }
 
 int main(int argc, char** argv) {
 	bool invert_match = false;
-	bool match_whole_lines = false;
+	bool whole_lines = false;
 	bool count_matches = false;
 	while (1) {
 		static struct option long_options[] = {
@@ -70,7 +72,7 @@ int main(int argc, char** argv) {
 		if (c == -1) break;
 		switch (c) {
 			case 'v': invert_match = true; break;
-			case 'x': match_whole_lines = true; break;
+			case 'x': whole_lines = true; break;
 			case 'c': count_matches = true; break;
 			default: break;
 		}
@@ -85,11 +87,14 @@ int main(int argc, char** argv) {
 	struct nfa* nfa;
 	nfa = build_nfa(tree);
 	free_tree(tree);
-	struct sim_state* state = sim_init(nfa);
+	struct sim_state* state = sim_init(nfa, count_matches,
+			whole_lines, invert_match);
 	uintptr_t buffer_size = 65536;
 	struct buffer* buffer = 0;
-	struct list* line_parts = new_list();
+	struct list* line_parts = 0;
+	if (!count_matches) line_parts = new_list();
 	uintptr_t line_start = 0;
+	uintmax_t match_count = 0;
 	while (1) {
 		buffer = buffer_fill(STDIN_FILENO, buffer_size);
 		if (buffer->full == -1) {
@@ -99,17 +104,28 @@ int main(int argc, char** argv) {
 		uintptr_t i;
 		for (i = 0; i < (uintptr_t)buffer->full; ++i) {
 			if (buffer->data[i] == '\n') {
-				check_match(state, line_parts, buffer, line_start, i);
+				if (count_matches) {
+					if (sim_is_match(state)) ++match_count;
+				} else {
+					output_match(state, line_parts, buffer, line_start, i);
+				}
+				state->dfa_state = state->start_state;
 				line_start = i+1;
 			} else {
 				sim_step(state, buffer->data[i]);
 			}
 		}
-		list_push_back(line_parts, buffer);
+		if (!count_matches) list_push_back(line_parts, buffer);
+		else free_buffer(buffer);
 	}
-	check_match(state, line_parts, buffer, line_start, buffer->full);
-	free(line_parts);
-	free(buffer);
+	if (count_matches) {
+		if (sim_is_match(state)) ++match_count;
+		printf("%" PRIuMAX "\n", match_count);
+	} else {
+		output_match(state, line_parts, buffer, line_start, buffer->full);
+	}
+	if (!count_matches) free(line_parts);
+	free_buffer(buffer);
 	free_sim_state(state);
 	free_nfa(nfa);
 	return 0;
