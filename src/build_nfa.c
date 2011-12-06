@@ -78,13 +78,24 @@ static struct nfa* concat_trees(struct syntree* t1, struct syntree* t2) {
 static struct nfa* alter_nfas(struct nfa* n1, struct nfa* n2) {
 	struct nfa_node* start1 = start(n1);
 	struct nfa_node* start2 = start(n2);
-	list_join(&n1->exits, &n2->exits);
-	list_join(&start1->edges.list, &start2->edges.list);
-	start1->edge_count += start2->edge_count;
-	list_pop_front(&n2->nodes.list);
+
+	struct nfa_edge* to1 = new_nfa_edge();
+	to1->destination = start1;
+	to1->min = 1; to1->max = 0;
+	struct nfa_edge* to2 = new_nfa_edge();
+	to2->destination = start2;
+	to2->min = 1; to2->max = 0;
+
+	struct nfa_node* new_start = new_nfa_node();
+	list_push_back(&new_start->edges.list, to1);
+	list_push_back(&new_start->edges.list, to2);
+	new_start->edge_count = 2;
+
 	list_join(&n1->nodes.list, &n2->nodes.list);
-	n1->node_count += n2->node_count-1;
-	free(start2);
+	list_push_front(&n1->nodes.list, new_start);
+	n1->node_count += n2->node_count+1;
+	list_join(&n1->exits, &n2->exits);
+
 	free(n2);
 	return n1;
 }
