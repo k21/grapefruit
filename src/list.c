@@ -13,6 +13,17 @@ struct list* new_list() {
 	return res;
 }
 
+void list_push_front(struct list* list, void* what) {
+	struct list_node* node = new_node();
+	node->ptr = what;
+	node->next = list->head;
+	if (!list->head) {
+		list->head = list->tail = node;
+	} else {
+		list->head = node;
+	}
+}
+
 void list_push_back(struct list* list, void* what) {
 	struct list_node* node = new_node();
 	node->ptr = what;

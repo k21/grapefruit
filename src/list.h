@@ -12,6 +12,7 @@ struct list {
 };
 
 struct list* new_list(void);
+void list_push_front(struct list* list, void* what);
 void list_push_back(struct list* list, void* what);
 void* list_pop_front(struct list* list);
 void list_purge(struct list* list);
