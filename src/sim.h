@@ -19,8 +19,10 @@ struct sim_state {
 
 struct sim_state* sim_init(struct nfa* nfa, bool count_matches,
 		bool whole_lines, bool invert_match);
-void sim_step(struct sim_state* state, uint_fast8_t chr);
-bool sim_is_match(struct sim_state* state);
+static inline void sim_step(struct sim_state* state, uint_fast8_t chr);
+static inline bool sim_is_match(struct sim_state* state);
 void free_sim_state(struct sim_state* state);
+
+#include "sim-impl.h"
 
 #endif // NEGREP_SIM_H_
