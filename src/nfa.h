@@ -1,5 +1,5 @@
-#ifndef NEGREP_NFA_H_
-#define NEGREP_NFA_H_
+#ifndef GRAPEFRUIT_NFA_H_
+#define GRAPEFRUIT_NFA_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -31,4 +31,4 @@ struct nfa {
 
 void free_nfa(struct nfa* nfa);
 
-#endif // NEGREP_NFA_H_
+#endif // GRAPEFRUIT_NFA_H_

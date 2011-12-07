@@ -1,5 +1,5 @@
-#ifndef NEGREP_SYNTREE_H_
-#define NEGREP_SYNTREE_H_
+#ifndef GRAPEFRUIT_SYNTREE_H_
+#define GRAPEFRUIT_SYNTREE_H_
 
 #include <stdint.h>
 
@@ -40,4 +40,4 @@ struct syntree {
 
 void free_tree(struct syntree* tree);
 
-#endif // NEGREP_SYNTREE_H_
+#endif // GRAPEFRUIT_SYNTREE_H_

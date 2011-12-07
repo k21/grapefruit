@@ -1,5 +1,5 @@
-#ifndef NEGREP_LIST_H_
-#define NEGREP_LIST_H_
+#ifndef GRAPEFRUIT_LIST_H_
+#define GRAPEFRUIT_LIST_H_
 
 struct list_node {
 	void* ptr;
@@ -19,4 +19,4 @@ void list_purge(struct list* list);
 void list_clear(struct list* list);
 void list_join(struct list* l1, struct list* l2);
 
-#endif // NEGREP_LIST_H_
+#endif // GRAPEFRUIT_LIST_H_

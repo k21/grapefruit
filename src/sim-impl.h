@@ -1,5 +1,5 @@
-#ifndef NEGREP_SIM_IMPL_H_
-#define NEGREP_SIM_IMPL_H_
+#ifndef GRAPEFRUIT_SIM_IMPL_H_
+#define GRAPEFRUIT_SIM_IMPL_H_
 
 static void sim_mark_active(struct nfa_node* node, bool* active,
 		uintptr_t node_count) {
@@ -72,4 +72,4 @@ static inline bool sim_is_match(struct sim_state* state) {
 	return match != state->invert_match;
 }
 
-#endif // NEGREP_SIM_IMPL_H_
+#endif // GRAPEFRUIT_SIM_IMPL_H_

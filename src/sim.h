@@ -1,5 +1,5 @@
-#ifndef NEGREP_SIM_H_
-#define NEGREP_SIM_H_
+#ifndef GRAPEFRUIT_SIM_H_
+#define GRAPEFRUIT_SIM_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -25,4 +25,4 @@ void free_sim_state(struct sim_state* state);
 
 #include "sim-impl.h"
 
-#endif // NEGREP_SIM_H_
+#endif // GRAPEFRUIT_SIM_H_

@@ -1,5 +1,5 @@
-#ifndef NEGREP_BUFFER_H_
-#define NEGREP_BUFFER_H_
+#ifndef GRAPEFRUIT_BUFFER_H_
+#define GRAPEFRUIT_BUFFER_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -33,4 +33,4 @@ void free_buffer(struct buffer* buffer);
 
 #include "buffer-impl.h"
 
-#endif // NEGREP_BUFFER_H_
+#endif // GRAPEFRUIT_BUFFER_H_

@@ -1,5 +1,5 @@
-#ifndef NEGREP_BUFFER_IMPL_H_
-#define NEGREP_BUFFER_IMPL_H_
+#ifndef GRAPEFRUIT_BUFFER_IMPL_H_
+#define GRAPEFRUIT_BUFFER_IMPL_H_
 
 static void free_buffer_chunk(struct buffer_chunk* chunk) {
 	free(chunk->data);
@@ -41,4 +41,4 @@ static inline uint_fast8_t buffer_get(struct buffer* buffer) {
 	return buffer->current->data[buffer->pos];
 }
 
-#endif // NEGREP_BUFFER_IMPL_H_
+#endif // GRAPEFRUIT_BUFFER_IMPL_H_
