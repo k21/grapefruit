@@ -55,6 +55,7 @@ void list_purge(struct list* list) {
 		free(node);
 		node = next;
 	}
+	list->head = list->tail = 0;
 }
 
 void list_clear(struct list* list) {
