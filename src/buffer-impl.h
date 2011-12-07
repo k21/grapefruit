@@ -9,13 +9,17 @@ static void free_buffer_chunk(struct buffer_chunk* chunk) {
 static struct buffer_chunk* new_chunk(uintptr_t size) {
 	struct buffer_chunk* res = alloc(sizeof(struct buffer_chunk));
 	res->full = 0;
-	res->data = alloc(size);
+	if (size != 0) {
+		res->data = alloc(size);
+	} else {
+		res->data = 0;
+	}
 	return res;
 }
 
 static inline int_fast8_t buffer_next(struct buffer* buffer) {
 	++buffer->pos;
-	if (buffer->current && (uintptr_t)buffer->pos < buffer->current->full) {
+	if ((uintptr_t)buffer->pos < buffer->current->full) {
 		return 1;
 	}
 	if (buffer->mark != -1) {

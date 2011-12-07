@@ -13,7 +13,7 @@ struct buffer* new_buffer(int in, int out, uintptr_t size) {
 	res->pos = -1;
 	res->mark = -1;
 	res->chunks.head = res->chunks.tail = 0;
-	res->current = 0;
+	res->current = new_chunk(0);
 	return res;
 }
 
