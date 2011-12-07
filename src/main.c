@@ -15,6 +15,9 @@
 #include "syntree.h"
 #include "sim.h"
 
+static struct buffer buffer;
+static struct sim_state state;
+
 int main(int argc, char** argv) {
 	bool invert_match = false;
 	bool whole_lines = false;
@@ -46,41 +49,41 @@ int main(int argc, char** argv) {
 	struct nfa* nfa;
 	nfa = build_nfa(tree);
 	free_tree(tree);
-	struct sim_state* state = sim_init(nfa, count_matches,
+	sim_init(&state, nfa, count_matches,
 			whole_lines, invert_match);
 	uintptr_t buffer_size = 65536;
-	struct buffer* buffer = new_buffer(STDIN_FILENO, STDOUT_FILENO, buffer_size);
+	buffer_init(&buffer, STDIN_FILENO, STDOUT_FILENO, buffer_size);
 	uintmax_t match_count = 0;
 	bool new_line = true;
 	intptr_t res;
-	while ((res = buffer_next(buffer))) {
+	while ((res = buffer_next(&buffer))) {
 		if (res == -1) die(1, errno, "Error reading from stdin");
 		if (new_line) {
-			if (!count_matches) buffer_mark(buffer);
+			if (!count_matches) buffer_mark(&buffer);
 			new_line = false;
 		}
-		uint_fast8_t ch = buffer_get(buffer);
+		uint_fast8_t ch = buffer_get(&buffer);
 		if (ch == '\n') {
 			new_line = true;
-			if (sim_is_match(state)) {
+			if (sim_is_match(&state)) {
 				if (count_matches) {
 					++match_count;
 				} else {
-					int_fast8_t res = buffer_print(buffer, true);
+					int_fast8_t res = buffer_print(&buffer, true);
 					if (res != 1) die(1, (res == -1) ? errno : 0,
 							"Error writing to stdout");
 				}
 			}
-			state->dfa_state = state->start_state;
+			state.dfa_state = state.start_state;
 		} else {
-			sim_step(state, ch);
+			sim_step(&state, ch);
 		}
 	}
-	if (!new_line && sim_is_match(state)) {
+	if (!new_line && sim_is_match(&state)) {
 		if (count_matches) {
 			++match_count;
 		} else {
-			int_fast8_t res = buffer_print(buffer, false);
+			int_fast8_t res = buffer_print(&buffer, false);
 			puts("");
 			if (res != 1) die(1, (res == -1) ? errno : 0,
 					"Error writing to stdout");
@@ -89,8 +92,8 @@ int main(int argc, char** argv) {
 	if (count_matches) {
 		printf("%" PRIuMAX "\n", match_count);
 	}
-	free_buffer(buffer);
-	free_sim_state(state);
+	buffer_cleanup(&buffer);
+	sim_cleanup(&state);
 	free_nfa(nfa);
 	return 0;
 }

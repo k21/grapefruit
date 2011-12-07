@@ -5,15 +5,19 @@
 #include "common.h"
 #include "list.h"
 
+void buffer_init(struct buffer* buffer, int in, int out, uintptr_t size) {
+	buffer->fd_in = in;
+	buffer->fd_out = out;
+	buffer->max_chunk_size = size;
+	buffer->pos = -1;
+	buffer->mark = -1;
+	buffer->chunks.head = buffer->chunks.tail = 0;
+	buffer->current = new_chunk(0);
+}
+
 struct buffer* new_buffer(int in, int out, uintptr_t size) {
 	struct buffer* res = alloc(sizeof(struct buffer));
-	res->fd_in = in;
-	res->fd_out = out;
-	res->max_chunk_size = size;
-	res->pos = -1;
-	res->mark = -1;
-	res->chunks.head = res->chunks.tail = 0;
-	res->current = new_chunk(0);
+	buffer_init(res, in, out, size);
 	return res;
 }
 
@@ -64,7 +68,7 @@ int_fast8_t buffer_print(struct buffer* buffer, bool print_current) {
 	return 1;
 }
 
-void free_buffer(struct buffer* buffer) {
+void buffer_cleanup(struct buffer* buffer) {
 	struct list_node* node = buffer->chunks.head;
 	while (node) {
 		free_buffer_chunk(node->ptr);
@@ -72,5 +76,10 @@ void free_buffer(struct buffer* buffer) {
 	}
 	list_clear(&buffer->chunks);
 	free_buffer_chunk(buffer->current);
+
+}
+
+void free_buffer(struct buffer* buffer) {
+	buffer_cleanup(buffer);
 	free(buffer);
 }

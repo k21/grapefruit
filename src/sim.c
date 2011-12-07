@@ -3,13 +3,15 @@
 #include "common.h"
 #include "sim.h"
 
-static struct sim_state* new_state(void) {
-	return alloc(sizeof(struct sim_state));
+struct sim_state* new_sim_state(struct nfa* nfa,
+		bool count_matches, bool whole_lines, bool invert_match) {
+	struct sim_state* res = alloc(sizeof(struct sim_state));
+	sim_init(res, nfa, count_matches, whole_lines, invert_match);
+	return res;
 }
 
-struct sim_state* sim_init(struct nfa* nfa, bool count_matches,
-		bool whole_lines, bool invert_match) {
-	struct sim_state* state = new_state();
+void sim_init(struct sim_state* state, struct nfa* nfa,
+		bool count_matches, bool whole_lines, bool invert_match) {
 	state->nfa = nfa;
 	state->cache = cache_init(nfa->node_count+1);
 	state->tmp = alloc(sizeof(bool)*(nfa->node_count+1));
@@ -24,11 +26,14 @@ struct sim_state* sim_init(struct nfa* nfa, bool count_matches,
 	state->count_matches = count_matches;
 	state->whole_lines = whole_lines;
 	state->invert_match = invert_match;
-	return state;
+}
+
+void sim_cleanup(struct sim_state* state) {
+	free_cache(state->cache);
+	free(state->tmp);
 }
 
 void free_sim_state(struct sim_state* state) {
-	free_cache(state->cache);
-	free(state->tmp);
+	sim_cleanup(state);
 	free(state);
 }
