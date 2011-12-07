@@ -55,13 +55,8 @@ int main(int argc, char** argv) {
 	buffer_init(&buffer, STDIN_FILENO, STDOUT_FILENO, buffer_size);
 	uintmax_t match_count = 0;
 	bool new_line = true;
-	intptr_t res;
-	while ((res = buffer_next(&buffer))) {
-		if (res == -1) die(1, errno, "Error reading from stdin");
-		if (new_line) {
-			if (!count_matches) buffer_mark(&buffer);
-			new_line = false;
-		}
+	intptr_t res = buffer_next(&buffer);
+	while (res == 1) {
 		uint_fast8_t ch = buffer_get(&buffer);
 		if (ch == '\n') {
 			new_line = true;
@@ -75,10 +70,15 @@ int main(int argc, char** argv) {
 				}
 			}
 			state.dfa_state = state.start_state;
+			res = buffer_next(&buffer);
+			if (!count_matches) buffer_mark(&buffer);
 		} else {
+			new_line = false;
 			sim_step(&state, ch);
+			res = buffer_next(&buffer);
 		}
 	}
+	if (res == -1) die(1, errno, "Error reading from stdin");
 	if (!new_line && sim_is_match(&state)) {
 		if (count_matches) {
 			++match_count;
