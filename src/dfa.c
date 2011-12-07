@@ -26,7 +26,7 @@ static struct dfa_cache* new_cache(uintptr_t depth) {
 static struct dfa_state* new_state(bool* active, uintptr_t active_length) {
 	struct dfa_state* res = alloc(sizeof(struct dfa_state));
 	uintptr_t i;
-	for (i = 0; i < 128; ++i) {
+	for (i = 0; i < 256; ++i) {
 		res->edges[i] = 0;
 	}
 	res->active = alloc(sizeof(bool)*active_length);
