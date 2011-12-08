@@ -33,6 +33,7 @@ static struct dfa_state* new_state(bool* active, uintptr_t active_length) {
 	for (i = 0; i < active_length; ++i) {
 		res->active[i] = active[i];
 	}
+	res->accept = res->active[active_length-1];
 	return res;
 }
 

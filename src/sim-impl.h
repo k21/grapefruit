@@ -53,8 +53,7 @@ static struct dfa_state* sim_compute_dfa(struct sim_state* state,
 
 static inline void sim_step(struct sim_state* state, uint_fast8_t chr) {
 	struct dfa_state* dfa_state = state->dfa_state;
-	if (!state->whole_lines
-			&& dfa_state->active[state->nfa->node_count]) return;
+	if (!state->whole_lines && dfa_state->accept) return;
 	struct dfa_state* next = dfa_state->edges[chr];
 	if (!next) {
 		next = sim_compute_dfa(state, chr);
@@ -64,8 +63,7 @@ static inline void sim_step(struct sim_state* state, uint_fast8_t chr) {
 }
 
 static inline bool sim_is_match(struct sim_state* state) {
-	bool match = state->dfa_state->active[state->nfa->node_count];
-	return match != state->invert_match;
+	return state->dfa_state->accept != state->invert_match;
 }
 
 #endif // GRAPEFRUIT_SIM_IMPL_H_

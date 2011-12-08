@@ -9,6 +9,7 @@ struct nfa;
 struct dfa_state {
 	bool* active;
 	struct dfa_state* edges[256];
+	bool accept;
 };
 
 struct dfa_cache;
