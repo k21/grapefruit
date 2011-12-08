@@ -1,34 +1,34 @@
 #ifndef GRAPEFRUIT_BUFFER_IMPL_H_
 #define GRAPEFRUIT_BUFFER_IMPL_H_
 
-static void free_buffer_chunk(struct buffer_chunk* chunk) {
+static void buffer_chunk_cleanup(struct buffer_chunk* chunk) {
 	free(chunk->data);
-	free(chunk);
 }
 
-static struct buffer_chunk* new_chunk(uintptr_t size) {
-	struct buffer_chunk* res = alloc(sizeof(struct buffer_chunk));
-	res->full = 0;
+static void buffer_chunk_init(struct buffer_chunk* chunk, uintptr_t size) {
+	chunk->full = 0;
 	if (size != 0) {
-		res->data = alloc(size);
+		chunk->data = alloc(size);
 	} else {
-		res->data = 0;
+		chunk->data = 0;
 	}
-	return res;
 }
 
 static inline int_fast8_t buffer_next(struct buffer* buffer) {
 	++buffer->pos;
-	if ((uintptr_t)buffer->pos < buffer->current->full) {
+	if ((uintptr_t)buffer->pos < buffer->current.full) {
 		return 1;
 	}
 	if (buffer->mark != -1) {
-		list_push_back(&buffer->chunks, buffer->current);
-	} else if (buffer->current) {
-		free_buffer_chunk(buffer->current);
+		struct buffer_chunk* to_save = alloc(sizeof(struct buffer_chunk));
+		to_save->full = buffer->current.full;
+		to_save->data = buffer->current.data;
+		list_push_back(&buffer->chunks, to_save);
+	} else {
+		buffer_chunk_cleanup(&buffer->current);
 	}
-	buffer->current = new_chunk(buffer->max_chunk_size);
-	char* data = buffer->current->data;
+	buffer_chunk_init(&buffer->current, buffer->max_chunk_size);
+	char* data = buffer->current.data;
 	intptr_t res = read(buffer->fd_in, data, buffer->max_chunk_size);
 	if (res == -1) {
 		return -1;
@@ -36,13 +36,13 @@ static inline int_fast8_t buffer_next(struct buffer* buffer) {
 		buffer->pos = -1;
 		return 0;
 	}
-	buffer->current->full = res;
+	buffer->current.full = res;
 	buffer->pos = 0;
 	return 1;
 }
 
 static inline uint_fast8_t buffer_get(struct buffer* buffer) {
-	return buffer->current->data[buffer->pos];
+	return buffer->current.data[buffer->pos];
 }
 
 #endif // GRAPEFRUIT_BUFFER_IMPL_H_

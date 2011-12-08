@@ -19,17 +19,17 @@ struct buffer {
 	intptr_t pos;
 	intptr_t mark;
 	struct list chunks;
-	struct buffer_chunk* current;
+	struct buffer_chunk current;
 };
 
 struct buffer* new_buffer(int in, int out, uintptr_t size);
 void buffer_init(struct buffer* buffer, int in, int out, uintptr_t size);
-static struct buffer_chunk* new_chunk(uintptr_t size);
+static void buffer_chunk_init(struct buffer_chunk* chunk, uintptr_t size);
 static inline int_fast8_t buffer_next(struct buffer* buffer);
 static inline inline uint_fast8_t buffer_get(struct buffer* buffer);
 void buffer_mark(struct buffer* buffer);
 int_fast8_t buffer_print(struct buffer* buffer, bool print_current);
-static void free_buffer_chunk(struct buffer_chunk* chunk);
+static void buffer_chunk_cleanup(struct buffer_chunk* chunk);
 void buffer_cleanup(struct buffer* buffer);
 void free_buffer(struct buffer* buffer);
 

@@ -12,13 +12,18 @@ void buffer_init(struct buffer* buffer, int in, int out, uintptr_t size) {
 	buffer->pos = -1;
 	buffer->mark = -1;
 	buffer->chunks.head = buffer->chunks.tail = 0;
-	buffer->current = new_chunk(0);
+	buffer_chunk_init(&buffer->current, 0);
 }
 
 struct buffer* new_buffer(int in, int out, uintptr_t size) {
 	struct buffer* res = alloc(sizeof(struct buffer));
 	buffer_init(res, in, out, size);
 	return res;
+}
+
+static void free_buffer_chunk(struct buffer_chunk* chunk) {
+	buffer_chunk_cleanup(chunk);
+	free(chunk);
 }
 
 void buffer_mark(struct buffer* buffer) {
@@ -61,7 +66,7 @@ int_fast8_t buffer_print(struct buffer* buffer, bool print_current) {
 	if (buffer->pos == 0 && !print_current) return 1;
 	uintptr_t end = buffer->pos+(print_current?1:0);
 	intptr_t res = write_all(buffer->fd_out,
-			buffer->current->data, buffer->mark, end);
+			buffer->current.data, buffer->mark, end);
 	if (res == -1) return -1;
 	else if ((uintptr_t)res != end) return 0;
 	buffer->mark = -1;
@@ -75,7 +80,7 @@ void buffer_cleanup(struct buffer* buffer) {
 		node = node->next;
 	}
 	list_clear(&buffer->chunks);
-	free_buffer_chunk(buffer->current);
+	buffer_chunk_cleanup(&buffer->current);
 
 }
 
