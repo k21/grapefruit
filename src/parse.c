@@ -92,7 +92,7 @@ static uintptr_t class_syntree(char* re, uintptr_t len, uintptr_t i,
 	}
 	++i;
 	uintptr_t begin = i;
-	while (i == begin || re[i] != ']') {
+	while (i == begin || re[i] != ']' || (re[begin] == '^' && i == begin+1)) {
 		++i;
 		if (i >= len) {
 			parse_error(re, begin-1, "Unmatched \"[\"");
