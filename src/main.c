@@ -55,17 +55,19 @@ int main(int argc, char** argv) {
 	buffer_init(&buffer, STDIN_FILENO, STDOUT_FILENO, buffer_size);
 	uintmax_t match_count = 0;
 	bool new_line = true;
+	bool some_match = false;
 	intptr_t res = buffer_next(&buffer);
 	while (res == 1) {
 		uint_fast8_t ch = buffer_get(&buffer);
 		if (ch == '\n') {
 			new_line = true;
 			if (sim_is_match(&state)) {
+				some_match = true;
 				if (count_matches) {
 					++match_count;
 				} else {
 					int_fast8_t res = buffer_print(&buffer, true);
-					if (res != 1) die(1, (res == -1) ? errno : 0,
+					if (res != 1) die(2, (res == -1) ? errno : 0,
 							"Error writing to stdout");
 				}
 			}
@@ -78,14 +80,15 @@ int main(int argc, char** argv) {
 			res = buffer_next(&buffer);
 		}
 	}
-	if (res == -1) die(1, errno, "Error reading from stdin");
+	if (res == -1) die(2, errno, "Error reading from stdin");
 	if (!new_line && sim_is_match(&state)) {
+		some_match = true;
 		if (count_matches) {
 			++match_count;
 		} else {
 			int_fast8_t res = buffer_print(&buffer, false);
 			puts("");
-			if (res != 1) die(1, (res == -1) ? errno : 0,
+			if (res != 1) die(2, (res == -1) ? errno : 0,
 					"Error writing to stdout");
 		}
 	}
@@ -95,5 +98,5 @@ int main(int argc, char** argv) {
 	buffer_cleanup(&buffer);
 	sim_cleanup(&state);
 	free_nfa(nfa);
-	return 0;
+	return some_match ? 0 : 1;
 }

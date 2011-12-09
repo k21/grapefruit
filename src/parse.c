@@ -24,7 +24,7 @@ static void parse_error(char* re, uintptr_t pos, char* errmsg) {
 		}
 		fputs("^\n", stderr);
 	}
-	exit(1);
+	exit(2);
 }
 
 static struct syntree* alternation(struct syntree* opt1, struct syntree* opt2) {
