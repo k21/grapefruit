@@ -27,7 +27,7 @@ AC_CONFIG_FILES([
 	src/Makefile
 ])
 
-CFLAGS="-Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wredundant-decls -Wpointer-arith -std=c99 -pedantic"
+CFLAGS="-Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wredundant-decls -Wpointer-arith -std=c99 -pedantic -g"
 
 AC_MSG_CHECKING(whether to enable debugging)
 AC_ARG_ENABLE(debug,
@@ -37,11 +37,11 @@ AC_ARG_ENABLE(debug,
 
 case "${enable_debug}" in
 	yes)
-		CFLAGS="$CFLAGS -g -O0 -DDEBUG"
+		CFLAGS="$CFLAGS -O0 -DDEBUG"
 		AC_MSG_RESULT(yes)
 		;;
 	no)
-		CFLAGS="$CFLAGS -g0 -O3"
+		CFLAGS="$CFLAGS -O3"
 		AC_MSG_RESULT(no)
 		;;
 	*)
