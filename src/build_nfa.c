@@ -108,6 +108,7 @@ static struct nfa* alter_trees(struct syntree* t1, struct syntree* t2) {
 
 static struct nfa* repeat_tree(struct syntree* repeated,
 		int_fast16_t min, int_fast16_t max) {
+	if (max == 0) return new_empty_nfa();
 	struct nfa* res = 0;
 	while (min > 1) {
 		if (!res) {
