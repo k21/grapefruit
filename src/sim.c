@@ -13,7 +13,7 @@ struct sim_state* new_sim_state(struct nfa* nfa,
 void sim_init(struct sim_state* state, struct nfa* nfa,
 		bool count_matches, bool whole_lines, bool invert_match) {
 	state->nfa = nfa;
-	state->cache = cache_init(nfa->node_count+1);
+	state->cache = new_cache(nfa->node_count+1);
 	state->tmp = alloc(sizeof(bool)*(nfa->node_count+1));
 	uintptr_t i;
 	for (i = 0; i < nfa->node_count+1; ++i) {

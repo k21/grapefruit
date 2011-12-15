@@ -14,7 +14,7 @@ struct dfa_state {
 
 struct dfa_cache;
 
-struct dfa_cache* cache_init(uintptr_t depth);
+struct dfa_cache* new_cache(uintptr_t depth);
 struct dfa_state* cache_get(struct dfa_cache* cache, bool* active);
 void free_cache(struct dfa_cache* cache);
 
