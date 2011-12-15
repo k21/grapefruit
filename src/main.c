@@ -56,6 +56,7 @@ int main(int argc, char** argv) {
 	uintmax_t match_count = 0;
 	bool new_line = true;
 	intptr_t res = buffer_next(&buffer);
+	if (!count_matches) buffer_mark(&buffer);
 	while (res == 1) {
 		uint_fast8_t ch = buffer_get(&buffer);
 		if (ch == '\n') {
