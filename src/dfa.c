@@ -14,7 +14,7 @@ struct dfa_cache_level {
 struct dfa_cache {
 	uintptr_t depth;
 	uintptr_t mem_usage;
-	struct dfa_cache_level root;
+	struct dfa_cache_level* root;
 };
 
 static struct dfa_cache_level* new_level(uintptr_t depth,
@@ -49,11 +49,7 @@ struct dfa_cache* new_cache(uintptr_t depth) {
 	struct dfa_cache* res = alloc(sizeof(struct dfa_cache));
 	res->depth = depth;
 	res->mem_usage = 0;
-	if (depth == 0) {
-		res->root.data.state = 0;
-	} else {
-		res->root.data.child[0] = res->root.data.child[1] = 0;
-	}
+	res->root = new_level(depth, res);
 	return res;
 }
 
@@ -77,7 +73,7 @@ static struct dfa_state* get_impl(struct dfa_cache_level* level, bool* active,
 }
 
 struct dfa_state* cache_get(struct dfa_cache* cache, bool* active) {
-	return get_impl(&cache->root, active, 0, cache);
+	return get_impl(cache->root, active, 0, cache);
 }
 
 static void free_cache_level(struct dfa_cache_level* level, uintptr_t depth) {
@@ -93,12 +89,6 @@ static void free_cache_level(struct dfa_cache_level* level, uintptr_t depth) {
 }
 
 void free_cache(struct dfa_cache* cache) {
-	if (cache->depth == 0) {
-		free(cache->root.data.state->active);
-		free(cache->root.data.state);
-	} else {
-		free_cache_level(cache->root.data.child[0], cache->depth-1);
-		free_cache_level(cache->root.data.child[1], cache->depth-1);
-	}
+	free_cache_level(cache->root, cache->depth);
 	free(cache);
 }
