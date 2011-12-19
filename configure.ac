@@ -9,6 +9,8 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_PROG_CC
 
+AC_C_INLINE
+
 AC_CHECK_HEADERS([stdlib.h string.h])
 
 AC_HEADER_STDBOOL
