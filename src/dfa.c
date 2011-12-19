@@ -14,6 +14,7 @@ struct dfa_cache_level {
 struct dfa_cache {
 	uintptr_t depth;
 	uintptr_t mem_usage;
+	uintptr_t mem_limit;
 	struct dfa_cache_level* root;
 };
 
@@ -42,15 +43,60 @@ static struct dfa_state* new_state(bool* active, struct dfa_cache* cache) {
 		res->active[i] = active[i];
 	}
 	res->accept = res->active[cache->depth-1];
+	res->persistent = false;
 	return res;
 }
 
-struct dfa_cache* new_cache(uintptr_t depth) {
+struct dfa_cache* new_cache(uintptr_t depth, uintptr_t mem_limit) {
 	struct dfa_cache* res = alloc(sizeof(struct dfa_cache));
 	res->depth = depth;
 	res->mem_usage = 0;
+	res->mem_limit = mem_limit;
 	res->root = new_level(depth, res);
 	return res;
+}
+
+static bool clear_level(struct dfa_cache_level* level, uintptr_t depth,
+		struct dfa_cache* cache) {
+	if (!level) return true;
+	if (depth == cache->depth) {
+		if (level->data.state->persistent) {
+			uintptr_t i;
+			for (i = 0; i < 256; ++i) {
+				level->data.state->edges[i] = 0;
+			}
+			return false;
+		} else {
+			free(level->data.state->active);
+			free(level->data.state);
+			free(level);
+			cache->mem_usage -= sizeof(bool)*cache->depth
+					+ sizeof(struct dfa_state)
+					+ sizeof(struct dfa_cache_level);
+			return true;
+		}
+	} else {
+		bool r0, r1;
+		r0 = clear_level(level->data.child[0], depth+1, cache);
+		r1 = clear_level(level->data.child[1], depth+1, cache);
+		if (r0 && r1) {
+			free(level);
+			cache->mem_usage -= sizeof(struct dfa_cache_level);
+			return true;
+		} else if (r0) {
+			level->data.child[0] = 0;
+		} else if (r1) {
+			level->data.child[1] = 0;
+		}
+		return false;
+	}
+}
+
+static void clear(struct dfa_cache* cache) {
+	bool r = clear_level(cache->root, 0, cache);
+	if (r) {
+		cache->root = new_level(cache->depth, cache);
+	}
 }
 
 static struct dfa_state* get_impl(struct dfa_cache_level* level, bool* active,
@@ -73,7 +119,14 @@ static struct dfa_state* get_impl(struct dfa_cache_level* level, bool* active,
 }
 
 struct dfa_state* cache_get(struct dfa_cache* cache, bool* active) {
-	return get_impl(cache->root, active, 0, cache);
+	struct dfa_state* res = get_impl(cache->root, active, 0, cache);
+	if (cache->mem_usage > cache->mem_limit) {
+		bool orig = res->persistent;
+		res->persistent = true;
+		clear(cache);
+		res->persistent = orig;
+	}
+	return res;
 }
 
 static void free_cache_level(struct dfa_cache_level* level, uintptr_t depth) {

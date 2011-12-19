@@ -13,15 +13,18 @@ struct sim_state* new_sim_state(struct nfa* nfa,
 void sim_init(struct sim_state* state, struct nfa* nfa,
 		bool count_matches, bool whole_lines, bool invert_match) {
 	state->nfa = nfa;
-	state->cache = new_cache(nfa->node_count+1);
+	state->cache = new_cache(nfa->node_count+1, 10*1024*1024);
+	//TODO make the cache memory limit customizable
 	state->tmp = alloc(sizeof(bool)*(nfa->node_count+1));
 	uintptr_t i;
 	for (i = 0; i < nfa->node_count+1; ++i) {
 		state->tmp[i] = false;
 	}
 	state->empty_state = cache_get(state->cache, state->tmp);
+	state->empty_state->persistent = true;
 	sim_mark_active(nfa->nodes.array[0], state->tmp, nfa->node_count);
 	state->start_state = cache_get(state->cache, state->tmp);
+	state->start_state->persistent = true;
 	state->dfa_state = state->start_state;
 	state->count_matches = count_matches;
 	state->whole_lines = whole_lines;
