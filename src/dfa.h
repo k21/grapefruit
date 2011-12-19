@@ -1,5 +1,5 @@
-#ifndef GRAPEFRUIT_DFS_H_
-#define GRAPEFRUIT_DFS_H_
+#ifndef GRAPEFRUIT_DFA_H_
+#define GRAPEFRUIT_DFA_H_
 
 #include <stdbool.h>
 
@@ -19,4 +19,4 @@ struct dfa_cache* new_cache(uintptr_t depth, uintptr_t mem_limit);
 struct dfa_state* cache_get(struct dfa_cache* cache, bool* active);
 void free_cache(struct dfa_cache* cache);
 
-#endif // GRAPEFRUIT_DFS_H_
+#endif // GRAPEFRUIT_DFA_H_
