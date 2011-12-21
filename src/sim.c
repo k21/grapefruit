@@ -31,6 +31,64 @@ void sim_init(struct sim_state* state, struct nfa* nfa,
 	state->invert_match = invert_match;
 }
 
+void sim_mark_active(struct nfa_node* node, bool* active,
+		uintptr_t node_count) {
+	if (!node) {
+		active[node_count] = true;
+		return;
+	}
+	if (active[node->id]) return;
+	active[node->id] = true;
+	uintptr_t i;
+	for (i = 0; i < node->edge_count; ++i) {
+		struct nfa_edge* edge = node->edges.array[i];
+		struct nfa_node* dest = edge->destination;
+		if (edge->min && !edge->max) {
+			sim_mark_active(dest, active, node_count);
+		}
+	}
+}
+
+void sim_node(struct nfa_node* node, bool* active,
+		uintptr_t node_count, uint_fast8_t chr) {
+	uintptr_t i;
+	for (i = 0; i < node->edge_count; ++i) {
+		struct nfa_edge* edge = node->edges.array[i];
+		if (chr >= edge->min && chr <= edge->max) {
+			struct nfa_node* dest = edge->destination;
+			sim_mark_active(dest, active, node_count);
+		}
+	}
+}
+
+struct dfa_state* sim_compute_dfa(struct sim_state* state,
+		uint_fast8_t chr) {
+	struct nfa* nfa = state->nfa;
+	bool* active = state->tmp;
+	bool* prev_active = state->dfa_state->active;
+	uintptr_t i;
+	for (i = 0; i < nfa->node_count+1; ++i) {
+		active[i] = false;
+	}
+	for (i = 0; i < nfa->node_count; ++i) {
+		if (!prev_active[i]) continue;
+		struct nfa_node* node = nfa->nodes.array[i];
+		sim_node(node, active, nfa->node_count, chr);
+	}
+	if (!state->whole_lines) {
+		sim_mark_active(nfa->nodes.array[0], active, nfa->node_count);
+	}
+	bool orig = state->dfa_state->persistent;
+	state->dfa_state->persistent = true;
+	struct dfa_state* res = cache_get(state->cache, active);
+	state->dfa_state->persistent = orig;
+	return res;
+}
+
+bool sim_is_match(struct sim_state* state) {
+	return state->dfa_state->accept != state->invert_match;
+}
+
 void sim_cleanup(struct sim_state* state) {
 	free_cache(state->cache);
 	free(state->tmp);
