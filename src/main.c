@@ -79,7 +79,8 @@ int main(int argc, char** argv) {
 		} else {
 			new_line = false;
 			if (!state.dfa_state->accept) {
-				sim_step(&state, ch);
+				if (ch > MAX_CHAR) state.dfa_state = state.before_begin;
+				else sim_step(&state, ch);
 			}
 			res = buffer_next(&buffer);
 		}
