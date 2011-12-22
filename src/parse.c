@@ -168,7 +168,7 @@ static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 		case 'x':
 			end = begin+2;
 			if (end >= len) {
-				parse_error(re, begin, "Incomplete \\x escape sequence");
+				parse_error(re, begin, "Incomplete hexadecimal escape sequence");
 			}
 			{
 				uint_fast32_t code = 0;
@@ -182,7 +182,7 @@ static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 					} else if (c >= 'A' && c <= 'F') {
 						c -= 'A'-10;
 					} else {
-						parse_error(re, begin+i, "Invalid hexadecimal character in \\x "
+						parse_error(re, begin+i, "Invalid character in hexadecimal "
 								"escape sequence");
 					}
 					code *= 16;
@@ -198,7 +198,7 @@ static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 		case '5': case '6': case '7': case '8': case '9':
 			end = begin+2;
 			if (end >= len) {
-				parse_error(re, begin, "Incomplete \\000 escape sequence");
+				parse_error(re, begin, "Incomplete octal escape sequence");
 			}
 			{
 				uint_fast32_t code = 0;
@@ -206,7 +206,7 @@ static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 				for (i = 0; i < 3; ++i) {
 					uint_fast8_t c = re[begin+i];
 					if (c < '0' || c > '7') {
-						parse_error(re, begin+i, "Invalid octal character in \\000 "
+						parse_error(re, begin+i, "Invalid character in octal "
 								"escape sequence");
 					}
 					code *= 8;
