@@ -43,7 +43,7 @@ void sim_mark_active(struct nfa_node* node, bool* active,
 	for (i = 0; i < node->edge_count; ++i) {
 		struct nfa_edge* edge = node->edges.array[i];
 		struct nfa_node* dest = edge->destination;
-		if (edge->min && !edge->max) {
+		if (edge->min == EDGE_SPECIAL_PREFIX && edge->max == EDGE_FREE) {
 			sim_mark_active(dest, active, node_count);
 		}
 	}

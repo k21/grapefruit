@@ -51,7 +51,7 @@ static struct nfa* new_range_nfa(uint_fast8_t min, uint_fast8_t max) {
 }
 
 static struct nfa* new_empty_nfa(void) {
-	return new_range_nfa(1, 0);
+	return new_range_nfa(EDGE_SPECIAL_PREFIX, EDGE_FREE);
 }
 
 static struct nfa_node* start(struct nfa* nfa) {
@@ -82,10 +82,10 @@ static struct nfa* alter_nfas(struct nfa* n1, struct nfa* n2) {
 
 	struct nfa_edge* to1 = new_nfa_edge();
 	to1->destination = start1;
-	to1->min = 1; to1->max = 0;
+	to1->min = EDGE_SPECIAL_PREFIX; to1->max = EDGE_FREE;
 	struct nfa_edge* to2 = new_nfa_edge();
 	to2->destination = start2;
-	to2->min = 1; to2->max = 0;
+	to2->min = EDGE_SPECIAL_PREFIX; to2->max = EDGE_FREE;
 
 	struct nfa_node* new_start = new_nfa_node();
 	list_push_back(&new_start->edges.list, to1);
@@ -125,10 +125,10 @@ static struct nfa* repeat_tree(struct syntree* repeated,
 		struct nfa* optional = build_nfa_impl(repeated);
 		struct nfa_edge* back_edge = new_nfa_edge();
 		back_edge->destination = start(optional);
-		back_edge->min = 1; back_edge->max = 0;
+		back_edge->min = EDGE_SPECIAL_PREFIX; back_edge->max = EDGE_FREE;
 		struct nfa_edge* exit_edge = new_nfa_edge();
 		exit_edge->destination = 0;
-		exit_edge->min = 1; exit_edge->max = 0;
+		exit_edge->min = EDGE_SPECIAL_PREFIX; exit_edge->max = EDGE_FREE;
 		struct nfa_node* exit_node = new_nfa_node();
 		list_push_back(&exit_node->edges.list, back_edge);
 		list_push_back(&exit_node->edges.list, exit_edge);
