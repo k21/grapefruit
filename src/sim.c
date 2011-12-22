@@ -75,9 +75,7 @@ struct dfa_state* sim_compute_dfa(struct sim_state* state,
 		struct nfa_node* node = nfa->nodes.array[i];
 		sim_node(node, active, nfa->node_count, chr);
 	}
-	if (!state->whole_lines) {
-		sim_mark_active(nfa->nodes.array[0], active, nfa->node_count);
-	}
+	sim_mark_active(nfa->nodes.array[0], active, nfa->node_count);
 	bool orig = state->dfa_state->persistent;
 	state->dfa_state->persistent = true;
 	struct dfa_state* res = cache_get(state->cache, active);
