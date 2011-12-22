@@ -10,8 +10,8 @@
 struct sim_state {
 	struct nfa* nfa;
 	struct dfa_state* dfa_state;
-	struct dfa_state* start_state;
-	struct dfa_state* empty_state;
+	struct dfa_state* before_begin;
+	struct dfa_state* after_begin;
 	struct dfa_cache* cache;
 	bool* tmp;
 	bool count_matches, whole_lines, invert_match;

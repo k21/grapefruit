@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 							"Error writing to stdout");
 				}
 			}
-			state.dfa_state = state.start_state;
+			state.dfa_state = state.after_begin;
 			res = buffer_next(&buffer);
 			if (!count_matches) buffer_mark(&buffer);
 		} else {
