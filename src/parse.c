@@ -155,7 +155,7 @@ static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 	switch (re[begin]) {
 		case '(': case ')': case '|': case '?': case '*': case '+':
 		case '{': case '}': case '[': case ']': case '.': case '\\':
-		case '\'': case '"':
+		case '\'': case '"': case '^': case '$':
 			ch = re[begin];
 			break;
 		case 'a': ch = 7; break;
