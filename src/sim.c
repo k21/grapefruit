@@ -54,7 +54,13 @@ void sim_node(struct nfa_node* node, bool* active,
 	uintptr_t i;
 	for (i = 0; i < node->edge_count; ++i) {
 		struct nfa_edge* edge = node->edges.array[i];
-		if (chr >= edge->min && chr <= edge->max) {
+		bool can_follow = false;
+		if (edge->min == EDGE_SPECIAL_PREFIX) {
+			if (edge->max == chr - EDGE_SPECIAL_PREFIX) can_follow = true;
+		} else {
+			if (chr >= edge->min && chr <= edge->max) can_follow = true;
+		}
+		if (can_follow) {
 			struct nfa_node* dest = edge->destination;
 			sim_mark_active(dest, active, node_count);
 		}
