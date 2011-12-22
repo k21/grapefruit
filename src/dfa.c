@@ -34,7 +34,7 @@ static struct dfa_state* new_state(bool* active, struct dfa_cache* cache) {
 	struct dfa_state* res = alloc(sizeof(struct dfa_state));
 	cache->mem_usage += sizeof(struct dfa_state);
 	uintptr_t i;
-	for (i = 0; i < 256; ++i) {
+	for (i = 0; i < EXT_ALPHABET_SIZE; ++i) {
 		res->edges[i] = 0;
 	}
 	res->active = alloc(sizeof(bool)*cache->depth);
@@ -62,7 +62,7 @@ static bool clear_level(struct dfa_cache_level* level, uintptr_t depth,
 	if (depth == cache->depth) {
 		if (level->data.state->persistent) {
 			uintptr_t i;
-			for (i = 0; i < 256; ++i) {
+			for (i = 0; i < EXT_ALPHABET_SIZE; ++i) {
 				level->data.state->edges[i] = 0;
 			}
 			return false;

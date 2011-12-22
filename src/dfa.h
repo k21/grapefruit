@@ -3,12 +3,14 @@
 
 #include <stdbool.h>
 
+#include "const.h"
+
 struct sim_state;
 struct nfa;
 
 struct dfa_state {
 	bool* active;
-	struct dfa_state* edges[256];
+	struct dfa_state* edges[EXT_ALPHABET_SIZE];
 	bool accept;
 	bool persistent;
 };

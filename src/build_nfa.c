@@ -3,6 +3,7 @@
 
 #include "build_nfa.h"
 #include "common.h"
+#include "const.h"
 #include "list.h"
 
 static struct nfa* new_nfa(void) {

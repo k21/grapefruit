@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+static const int_least16_t UNLIMITED = -1;
+
 enum syntree_type {
 	CONCAT, ALTER, REPEAT, RANGE, EMPTY
 };
