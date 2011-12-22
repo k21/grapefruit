@@ -6,7 +6,7 @@
 static const int_least16_t UNLIMITED = -1;
 
 enum syntree_type {
-	CONCAT, ALTER, REPEAT, RANGE, EMPTY
+	CONCAT, ALTER, REPEAT, RANGE, EMPTY, INPUT_BEGIN, INPUT_END
 };
 
 struct syntree_concat {

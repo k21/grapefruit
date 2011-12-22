@@ -173,6 +173,10 @@ static struct nfa* build_nfa_impl(struct syntree* tree) {
 					tree->data.repeat.min, tree->data.repeat.max);
 		case RANGE:
 			return new_range_nfa(tree->data.range.min, tree->data.range.max);
+		case INPUT_BEGIN:
+			return new_range_nfa(EDGE_SPECIAL_PREFIX, EDGE_INPUT_BEGIN);
+		case INPUT_END:
+			return new_range_nfa(EDGE_SPECIAL_PREFIX, EDGE_INPUT_END);
 		case EMPTY:
 			return new_empty_nfa();
 	}

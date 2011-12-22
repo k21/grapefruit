@@ -86,6 +86,18 @@ static struct syntree* empty_syntree(void) {
 	return res;
 }
 
+static struct syntree* input_begin_syntree(void) {
+	struct syntree* res = new_syntree();
+	res->type = INPUT_BEGIN;
+	return res;
+}
+
+static struct syntree* input_end_syntree(void) {
+	struct syntree* res = new_syntree();
+	res->type = INPUT_END;
+	return res;
+}
+
 static uintptr_t class_syntree(char* re, uintptr_t len, uintptr_t i,
 		struct syntree** result) {
 	if (i+1 >= len) {
@@ -343,6 +355,14 @@ static uintptr_t parse_impl(char* re, uintptr_t len, uintptr_t begin,
 			case '.':
 				option = concatenation(option, last);
 				last = range_syntree(0, MAX_CHAR);
+				break;
+			case '^':
+				option = concatenation(option, last);
+				last = input_begin_syntree();
+				break;
+			case '$':
+				option = concatenation(option, last);
+				last = input_end_syntree();
 				break;
 			default:
 				option = concatenation(option, last);
