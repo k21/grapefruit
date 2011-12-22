@@ -77,7 +77,9 @@ int main(int argc, char** argv) {
 			if (!count_matches) buffer_mark(&buffer);
 		} else {
 			new_line = false;
-			sim_step(&state, ch);
+			if (!state.dfa_state->accept) {
+				sim_step(&state, ch);
+			}
 			res = buffer_next(&buffer);
 		}
 	}
