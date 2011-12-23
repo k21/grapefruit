@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 	struct syntree* tree;
 	tree = parse(regex, strlen(regex));
 	struct nfa* nfa;
-	nfa = build_nfa(tree);
+	nfa = build_nfa(tree, whole_lines);
 	free_tree(tree);
 	sim_init(&state, nfa, count_matches,
 			whole_lines, invert_match);

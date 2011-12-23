@@ -192,8 +192,21 @@ static void copy_list_to_array(struct list* list, void** array) {
 	}
 }
 
-struct nfa* build_nfa(struct syntree* tree) {
+static struct nfa* whole_lines_nfa(struct nfa* nfa) {
+	struct nfa* input_begin;
+	struct nfa* input_end;
+	input_begin = new_range_nfa(EDGE_SPECIAL_PREFIX, EDGE_INPUT_BEGIN);
+	input_end   = new_range_nfa(EDGE_SPECIAL_PREFIX, EDGE_INPUT_END);
+	nfa = concat_nfas(input_begin, nfa);
+	nfa = concat_nfas(nfa, input_end);
+	return nfa;
+}
+
+struct nfa* build_nfa(struct syntree* tree, bool whole_lines) {
 	struct nfa* nfa = build_nfa_impl(tree);
+	if (whole_lines) {
+		nfa = whole_lines_nfa(nfa);
+	}
 	struct nfa_node** nodes = alloc(nfa->node_count * sizeof(void*));
 	copy_list_to_array(&nfa->nodes.list, (void**)nodes);
 	list_clear(&nfa->nodes.list);
