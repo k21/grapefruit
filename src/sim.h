@@ -21,10 +21,6 @@ struct sim_state* new_sim_state(struct nfa* nfa,
 		bool count_matches, bool whole_lines, bool invert_match);
 void sim_init(struct sim_state* state, struct nfa* nfa,
 		bool count_matches, bool whole_lines, bool invert_match);
-void sim_mark_active(struct nfa_node* node, bool* active,
-		uintptr_t node_count);
-void sim_node(struct nfa_node* node, bool* active,
-		uintptr_t node_count, uint_fast8_t chr);
 struct dfa_state* sim_compute_dfa(struct sim_state* state,
 		uint_fast8_t chr);
 static inline void sim_step(struct sim_state* state, uint_fast8_t chr);
