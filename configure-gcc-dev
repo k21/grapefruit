@@ -1,0 +1,3 @@
+#!/bin/sh
+
+CC="gcc -std=c99" CFLAGS="-Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wredundant-decls -Wpointer-arith -pedantic -O2 -g" ./configure
