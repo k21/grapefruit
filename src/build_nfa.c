@@ -3,6 +3,7 @@
 
 #include "build_nfa.h"
 #include "common.h"
+#include "const.h"
 #include "list.h"
 
 static struct nfa* new_nfa(void) {
@@ -50,7 +51,7 @@ static struct nfa* new_range_nfa(uint_fast8_t min, uint_fast8_t max) {
 }
 
 static struct nfa* new_empty_nfa(void) {
-	return new_range_nfa(1, 0);
+	return new_range_nfa(EDGE_SPECIAL_PREFIX, EDGE_FREE);
 }
 
 static struct nfa_node* start(struct nfa* nfa) {
@@ -81,10 +82,10 @@ static struct nfa* alter_nfas(struct nfa* n1, struct nfa* n2) {
 
 	struct nfa_edge* to1 = new_nfa_edge();
 	to1->destination = start1;
-	to1->min = 1; to1->max = 0;
+	to1->min = EDGE_SPECIAL_PREFIX; to1->max = EDGE_FREE;
 	struct nfa_edge* to2 = new_nfa_edge();
 	to2->destination = start2;
-	to2->min = 1; to2->max = 0;
+	to2->min = EDGE_SPECIAL_PREFIX; to2->max = EDGE_FREE;
 
 	struct nfa_node* new_start = new_nfa_node();
 	list_push_back(&new_start->edges.list, to1);
@@ -124,10 +125,10 @@ static struct nfa* repeat_tree(struct syntree* repeated,
 		struct nfa* optional = build_nfa_impl(repeated);
 		struct nfa_edge* back_edge = new_nfa_edge();
 		back_edge->destination = start(optional);
-		back_edge->min = 1; back_edge->max = 0;
+		back_edge->min = EDGE_SPECIAL_PREFIX; back_edge->max = EDGE_FREE;
 		struct nfa_edge* exit_edge = new_nfa_edge();
 		exit_edge->destination = 0;
-		exit_edge->min = 1; exit_edge->max = 0;
+		exit_edge->min = EDGE_SPECIAL_PREFIX; exit_edge->max = EDGE_FREE;
 		struct nfa_node* exit_node = new_nfa_node();
 		list_push_back(&exit_node->edges.list, back_edge);
 		list_push_back(&exit_node->edges.list, exit_edge);
@@ -172,6 +173,10 @@ static struct nfa* build_nfa_impl(struct syntree* tree) {
 					tree->data.repeat.min, tree->data.repeat.max);
 		case RANGE:
 			return new_range_nfa(tree->data.range.min, tree->data.range.max);
+		case INPUT_BEGIN:
+			return new_range_nfa(EDGE_SPECIAL_PREFIX, EDGE_INPUT_BEGIN);
+		case INPUT_END:
+			return new_range_nfa(EDGE_SPECIAL_PREFIX, EDGE_INPUT_END);
 		case EMPTY:
 			return new_empty_nfa();
 	}
@@ -187,8 +192,21 @@ static void copy_list_to_array(struct list* list, void** array) {
 	}
 }
 
-struct nfa* build_nfa(struct syntree* tree) {
+static struct nfa* whole_lines_nfa(struct nfa* nfa) {
+	struct nfa* input_begin;
+	struct nfa* input_end;
+	input_begin = new_range_nfa(EDGE_SPECIAL_PREFIX, EDGE_INPUT_BEGIN);
+	input_end   = new_range_nfa(EDGE_SPECIAL_PREFIX, EDGE_INPUT_END);
+	nfa = concat_nfas(input_begin, nfa);
+	nfa = concat_nfas(nfa, input_end);
+	return nfa;
+}
+
+struct nfa* build_nfa(struct syntree* tree, bool whole_lines) {
 	struct nfa* nfa = build_nfa_impl(tree);
+	if (whole_lines) {
+		nfa = whole_lines_nfa(nfa);
+	}
 	struct nfa_node** nodes = alloc(nfa->node_count * sizeof(void*));
 	copy_list_to_array(&nfa->nodes.list, (void**)nodes);
 	list_clear(&nfa->nodes.list);

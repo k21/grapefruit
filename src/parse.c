@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "common.h"
+#include "const.h"
 #include "parse.h"
 
 static struct syntree* new_syntree(void) {
@@ -85,6 +86,18 @@ static struct syntree* empty_syntree(void) {
 	return res;
 }
 
+static struct syntree* input_begin_syntree(void) {
+	struct syntree* res = new_syntree();
+	res->type = INPUT_BEGIN;
+	return res;
+}
+
+static struct syntree* input_end_syntree(void) {
+	struct syntree* res = new_syntree();
+	res->type = INPUT_END;
+	return res;
+}
+
 static uintptr_t class_syntree(char* re, uintptr_t len, uintptr_t i,
 		struct syntree** result) {
 	if (i+1 >= len) {
@@ -105,7 +118,7 @@ static uintptr_t class_syntree(char* re, uintptr_t len, uintptr_t i,
 		++begin;
 	}
 	uintptr_t j;
-	bool in_class[129] = {0};
+	bool in_class[ALPHABET_SIZE+1] = {0};
 	for (j = begin; j < end; ++j) {
 		uint_fast8_t ch = re[j];
 		if (j+2 < end && re[j+1] == '-') {
@@ -120,11 +133,11 @@ static uintptr_t class_syntree(char* re, uintptr_t len, uintptr_t i,
 			in_class[(uintptr_t)ch] = true;
 		}
 	}
-	in_class[128] = invert;
+	in_class[ALPHABET_SIZE] = invert;
 	*result = 0;
 	uintptr_t range_start = 0;
 	bool prev_in_class = false;
-	for(j = 0; j < 129; ++j) {
+	for(j = 0; j < ALPHABET_SIZE+1; ++j) {
 		if (in_class[j] != invert) {
 			if (!prev_in_class) {
 				prev_in_class = true;
@@ -155,7 +168,7 @@ static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 	switch (re[begin]) {
 		case '(': case ')': case '|': case '?': case '*': case '+':
 		case '{': case '}': case '[': case ']': case '.': case '\\':
-		case '\'': case '"':
+		case '\'': case '"': case '^': case '$':
 			ch = re[begin];
 			break;
 		case 'a': ch = 7; break;
@@ -188,7 +201,7 @@ static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 					code *= 16;
 					code += c;
 				}
-				if (code > 127) {
+				if (code > MAX_CHAR) {
 					parse_error(re, begin, "Escaped non-ASCII character");
 				}
 				ch = code;
@@ -212,7 +225,7 @@ static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 					code *= 8;
 					code += c-'0';
 				}
-				if (code > 127) {
+				if (code > MAX_CHAR) {
 					parse_error(re, begin, "Escaped non-ASCII character");
 				}
 				ch = code;
@@ -323,10 +336,10 @@ static uintptr_t parse_impl(char* re, uintptr_t len, uintptr_t begin,
 				last = alternation(last, empty_syntree());
 				break;
 			case '*':
-				last = repetition(last, 0, -1);
+				last = repetition(last, 0, UNLIMITED);
 				break;
 			case '+':
-				last = repetition(last, 1, -1);
+				last = repetition(last, 1, UNLIMITED);
 				break;
 			case '{':
 				i = custom_repetition(re, len, i+1, &last);
@@ -341,7 +354,15 @@ static uintptr_t parse_impl(char* re, uintptr_t len, uintptr_t begin,
 				break;
 			case '.':
 				option = concatenation(option, last);
-				last = range_syntree(0, 127);
+				last = range_syntree(0, MAX_CHAR);
+				break;
+			case '^':
+				option = concatenation(option, last);
+				last = input_begin_syntree();
+				break;
+			case '$':
+				option = concatenation(option, last);
+				last = input_end_syntree();
 				break;
 			default:
 				option = concatenation(option, last);
@@ -361,7 +382,9 @@ static uintptr_t parse_impl(char* re, uintptr_t len, uintptr_t begin,
 struct syntree* parse(char* re, uintptr_t len) {
 	uintptr_t i;
 	for (i = 0; i < len; ++i) {
-		if ((uint_fast8_t)re[i] > 127) parse_error(re, i, "Non-ASCII character");
+		if ((uint_fast8_t)re[i] > MAX_CHAR) {
+			parse_error(re, i, "Non-ASCII character");
+		}
 	}
 	struct syntree* res;
 	parse_impl(re, len, 0, &res);

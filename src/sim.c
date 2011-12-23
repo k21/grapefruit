@@ -34,19 +34,26 @@ void sim_init(struct sim_state* state, struct nfa* nfa,
 	state->cache = new_cache(nfa->node_count+1, 10*1024*1024);
 	//TODO make the cache memory limit customizable
 	state->tmp = alloc(sizeof(bool)*(nfa->node_count+1));
+	state->count_matches = count_matches;
+	state->whole_lines = whole_lines;
+	state->invert_match = invert_match;
+
 	uintptr_t i;
 	for (i = 0; i < nfa->node_count+1; ++i) {
 		state->tmp[i] = false;
 	}
-	state->empty_state = cache_get(state->cache, state->tmp);
-	state->empty_state->persistent = true;
+
 	sim_mark_active(nfa->nodes.array[0], state->tmp, nfa->node_count);
-	state->start_state = cache_get(state->cache, state->tmp);
-	state->start_state->persistent = true;
-	state->dfa_state = state->start_state;
-	state->count_matches = count_matches;
-	state->whole_lines = whole_lines;
-	state->invert_match = invert_match;
+	state->before_begin = cache_get(state->cache, state->tmp);
+	state->before_begin->persistent = true;
+
+	state->dfa_state = state->before_begin;
+	state->after_begin = sim_compute_dfa(state, CHAR_INPUT_BEGIN);
+	state->after_begin->persistent = true;
+
+	state->before_begin->edges[CHAR_INPUT_BEGIN] = state->after_begin;
+
+	state->dfa_state = state->after_begin;
 }
 
 static inline void sim_node(struct nfa_node* node, bool* active,
@@ -54,7 +61,13 @@ static inline void sim_node(struct nfa_node* node, bool* active,
 	uintptr_t i;
 	for (i = 0; i < node->edge_count; ++i) {
 		struct nfa_edge* edge = node->edges.array[i];
-		if (chr >= edge->min && chr <= edge->max) {
+		bool can_follow = false;
+		if (edge->min == EDGE_SPECIAL_PREFIX) {
+			if (edge->max == chr - EDGE_SPECIAL_PREFIX) can_follow = true;
+		} else {
+			if (chr >= edge->min && chr <= edge->max) can_follow = true;
+		}
+		if (can_follow) {
 			struct nfa_node* dest = edge->destination;
 			sim_mark_active(dest, active, node_count);
 		}
@@ -75,9 +88,7 @@ struct dfa_state* sim_compute_dfa(struct sim_state* state,
 		struct nfa_node* node = nfa->nodes.array[i];
 		sim_node(node, active, nfa->node_count, chr);
 	}
-	if (!state->whole_lines) {
-		sim_mark_active(nfa->nodes.array[0], active, nfa->node_count);
-	}
+	sim_mark_active(nfa->nodes.array[0], active, nfa->node_count);
 	bool orig = state->dfa_state->persistent;
 	state->dfa_state->persistent = true;
 	struct dfa_state* res = cache_get(state->cache, active);

@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 	struct syntree* tree;
 	tree = parse(regex, strlen(regex));
 	struct nfa* nfa;
-	nfa = build_nfa(tree);
+	nfa = build_nfa(tree, whole_lines);
 	free_tree(tree);
 	sim_init(&state, nfa, count_matches,
 			whole_lines, invert_match);
@@ -62,6 +62,7 @@ int main(int argc, char** argv) {
 		uint_fast8_t ch = buffer_get(&buffer);
 		if (ch == '\n') {
 			new_line = true;
+			if (!state.dfa_state->accept) sim_step(&state, CHAR_INPUT_END);
 			if (sim_is_match(&state)) {
 				some_match = true;
 				if (count_matches) {
@@ -72,25 +73,31 @@ int main(int argc, char** argv) {
 							"Error writing to stdout");
 				}
 			}
-			state.dfa_state = state.start_state;
+			state.dfa_state = state.after_begin;
 			res = buffer_next(&buffer);
 			if (!count_matches) buffer_mark(&buffer);
 		} else {
 			new_line = false;
-			sim_step(&state, ch);
+			if (!state.dfa_state->accept) {
+				if (ch > MAX_CHAR) state.dfa_state = state.before_begin;
+				else sim_step(&state, ch);
+			}
 			res = buffer_next(&buffer);
 		}
 	}
 	if (res == -1) die(2, errno, "Error reading from stdin");
-	if (!new_line && sim_is_match(&state)) {
-		some_match = true;
-		if (count_matches) {
-			++match_count;
-		} else {
-			int_fast8_t res = buffer_print(&buffer, false);
-			puts("");
-			if (res != 1) die(2, (res == -1) ? errno : 0,
-					"Error writing to stdout");
+	if (!new_line) {
+		if (!state.dfa_state->accept) sim_step(&state, CHAR_INPUT_END);
+		if (sim_is_match(&state)) {
+			some_match = true;
+			if (count_matches) {
+				++match_count;
+			} else {
+				int_fast8_t res = buffer_print(&buffer, false);
+				puts("");
+				if (res != 1) die(2, (res == -1) ? errno : 0,
+						"Error writing to stdout");
+			}
 		}
 	}
 	if (count_matches) {

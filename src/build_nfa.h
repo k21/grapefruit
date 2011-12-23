@@ -4,6 +4,6 @@
 #include "syntree.h"
 #include "nfa.h"
 
-struct nfa* build_nfa(struct syntree* tree);
+struct nfa* build_nfa(struct syntree* tree, bool whole_lines);
 
 #endif // GRAPEFRUIT_BUILD_NFA_H_
