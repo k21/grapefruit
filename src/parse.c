@@ -13,6 +13,7 @@ static struct syntree* new_syntree(void) {
 	return alloc(sizeof(struct syntree));
 }
 
+// Print formatted parse error and exit the program
 static void parse_error(char* re, uintptr_t pos, char* errmsg) {
 	fprintf(stderr, "The regular expression could not be parsed!\n\n");
 	fprintf(stderr, "Error: %s\n", errmsg);
@@ -31,10 +32,12 @@ static void parse_error(char* re, uintptr_t pos, char* errmsg) {
 static struct syntree* alternation(struct syntree* opt1, struct syntree* opt2) {
 	if (!opt1) return opt2;
 	if (!opt2) return opt1;
+
 	if (opt1->type == EMPTY && opt2->type == EMPTY) {
 		free_tree(opt2);
 		return opt1;
 	}
+
 	struct syntree* res = new_syntree();
 	res->type = ALTER;
 	res->data.alter.option1 = opt1;
@@ -45,6 +48,7 @@ static struct syntree* alternation(struct syntree* opt1, struct syntree* opt2) {
 static struct syntree* concatenation(struct syntree* part1, struct syntree* part2) {
 	if (!part1) return part2;
 	if (!part2) return part1;
+
 	if (part1->type == EMPTY) {
 		free_tree(part1);
 		return part2;
@@ -53,6 +57,7 @@ static struct syntree* concatenation(struct syntree* part1, struct syntree* part
 		free_tree(part2);
 		return part1;
 	}
+
 	struct syntree* res = new_syntree();
 	res->type = CONCAT;
 	res->data.concat.part1 = part1;
@@ -64,6 +69,7 @@ static struct syntree* repetition(struct syntree* repeated,
 		int_fast16_t min, int_fast16_t max) {
 	if (!repeated) return 0;
 	if (repeated->type == EMPTY) return repeated;
+
 	struct syntree* res = new_syntree();
 	res->type = REPEAT;
 	res->data.repeat.repeated = repeated;
@@ -98,12 +104,16 @@ static struct syntree* input_end_syntree(void) {
 	return res;
 }
 
+// Parse expression in brackets, return the position of the ending ']'
+// Resulting syntree is saved to *result
 static uintptr_t class_syntree(char* re, uintptr_t len, uintptr_t i,
 		struct syntree** result) {
 	if (i+1 >= len) {
 		parse_error(re, i, "Unmatched \"[\"");
 	}
 	++i;
+
+	// find the ending ']'
 	uintptr_t begin = i;
 	while (i == begin || re[i] != ']' || (re[begin] == '^' && i == begin+1)) {
 		++i;
@@ -112,15 +122,20 @@ static uintptr_t class_syntree(char* re, uintptr_t len, uintptr_t i,
 		}
 	}
 	uintptr_t end = i;
+
+	// is this class inverted?
 	bool invert = false;
 	if (re[begin] == '^') {
 		invert = true;
 		++begin;
 	}
+
+	// find out which chars are in the class
 	uintptr_t j;
 	bool in_class[ALPHABET_SIZE+1] = {0};
 	for (j = begin; j < end; ++j) {
 		uint_fast8_t ch = re[j];
+		// check for character interval
 		if (j+2 < end && re[j+1] == '-') {
 			j += 2;
 			uint_fast8_t ch2 = re[j];
@@ -133,10 +148,12 @@ static uintptr_t class_syntree(char* re, uintptr_t len, uintptr_t i,
 			in_class[(uintptr_t)ch] = true;
 		}
 	}
+
 	in_class[ALPHABET_SIZE] = invert;
 	*result = 0;
 	uintptr_t range_start = 0;
 	bool prev_in_class = false;
+	// create alternation of ranges for this class
 	for(j = 0; j < ALPHABET_SIZE+1; ++j) {
 		if (in_class[j] != invert) {
 			if (!prev_in_class) {
@@ -158,6 +175,9 @@ static uintptr_t class_syntree(char* re, uintptr_t len, uintptr_t i,
 	return end;
 }
 
+// Create syntree for escaped character (called when \ is encountered)
+// Returns the position of last character in escape sequence
+// Resulting syntree is saved to *result
 static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 		struct syntree** result) {
 	if (begin >= len) {
@@ -169,8 +189,11 @@ static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 		case '(': case ')': case '|': case '?': case '*': case '+':
 		case '{': case '}': case '[': case ']': case '.': case '\\':
 		case '\'': case '"': case '^': case '$':
+			// Escaped special characters are treated like normal characters
 			ch = re[begin];
 			break;
+
+		// Some special one-character escape sequences
 		case 'a': ch = 7; break;
 		case 'b': ch = 8; break;
 		case 'f': ch = 12; break;
@@ -178,6 +201,8 @@ static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 		case 'r': ch = 13; break;
 		case 't': ch = 9; break;
 		case 'v': ch = 11; break;
+		
+		// Hexadecimal escape sequences
 		case 'x':
 			end = begin+2;
 			if (end >= len) {
@@ -207,6 +232,8 @@ static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 				ch = code;
 			}
 			break;
+
+		// Octal escape sequences
 		case '0': case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':
 			end = begin+2;
@@ -234,10 +261,13 @@ static uintptr_t escaped_syntree(char* re, uintptr_t len, uintptr_t begin,
 		default:
 			parse_error(re, begin, "Unknown escape sequence");
 	}
+
 	*result = range_syntree(ch, ch);
 	return end;
 }
 
+// Parses decimal number
+// In case of error or if the resulting number is higher than limit, returns -1
 static int_fast32_t parse_number(char* data, uintptr_t begin, uintptr_t end,
 		int_fast32_t limit) {
 	uintptr_t i;
@@ -253,6 +283,9 @@ static int_fast32_t parse_number(char* data, uintptr_t begin, uintptr_t end,
 	return res;
 }
 
+// Parses custom number of repetitions of *last
+// Returns the position of matching '}'
+// Resulting syntree is saved to *last
 static uintptr_t custom_repetition(char* re, uintptr_t len, uintptr_t begin,
 		struct syntree** last) {
 	if (begin >= len) {
@@ -261,6 +294,8 @@ static uintptr_t custom_repetition(char* re, uintptr_t len, uintptr_t begin,
 	if (re[begin] == '}') {
 		parse_error(re, begin-1, "Empty repetition range");
 	}
+
+	// Find the matching '}'
 	uintptr_t i = begin;
 	while (re[i] != '}') {
 		++i;
@@ -269,6 +304,8 @@ static uintptr_t custom_repetition(char* re, uintptr_t len, uintptr_t begin,
 		}
 	}
 	uintptr_t end = i;
+
+	// Find the ','
 	uintptr_t middle = end;
 	for (i = begin; i < end; ++i) {
 		if (re[i] == ',') {
@@ -276,10 +313,12 @@ static uintptr_t custom_repetition(char* re, uintptr_t len, uintptr_t begin,
 			break;
 		}
 	}
+
 	int_fast32_t limit = 10000;
 	char err_over_limit[100];
 	sprintf(err_over_limit, "Too many repetitions (> %"PRIdFAST32")", limit);
 	if (middle == begin) {
+		// Lower limit not used, defaults to zero
 		int_fast32_t max = parse_number(re, middle+1, end, limit);
 		if (max == -1) parse_error(re, middle+1, err_over_limit);
 		*last = repetition(*last, 0, max);
@@ -292,6 +331,7 @@ static uintptr_t custom_repetition(char* re, uintptr_t len, uintptr_t begin,
 			return end;
 		}
 		if (middle == end-1) {
+			// Upper limit not used, defaults to unlimited
 			*last = repetition(*last, min, -1);
 			return end;
 		} else {
@@ -304,11 +344,22 @@ static uintptr_t custom_repetition(char* re, uintptr_t len, uintptr_t begin,
 	}
 }
 
+// Recursively parse regular expression
+// Returns the position after the last character
+// Resulting syntree is saved to *result
 static uintptr_t parse_impl(char* re, uintptr_t len, uintptr_t begin,
 		struct syntree** result) {
+	// last contains the last atomic regular expression
+	// repeats are applied to last
 	struct syntree* last = empty_syntree();
+	// options in alternations are loaded to option
+	// concatenations are applied to aption
 	struct syntree* option = empty_syntree();
+	// *result is alernation of the single options
+	// alternations are applied to *result
 	*result = 0;
+	// last, option and *result implement operator priority
+
 	uintptr_t i;
 	bool done = false;
 	for (i = begin; i < len; ++i) {
@@ -317,6 +368,7 @@ static uintptr_t parse_impl(char* re, uintptr_t len, uintptr_t begin,
 			case '(':
 				option = concatenation(option, last);
 				++i;
+				// recursively launch parsing of subexpression in parentheses
 				i = parse_impl(re, len, i, &last);
 				//TODO check for error
 				break;
@@ -365,6 +417,7 @@ static uintptr_t parse_impl(char* re, uintptr_t len, uintptr_t begin,
 				last = input_end_syntree();
 				break;
 			default:
+				// non-special characters are treated as REs matching themselves
 				option = concatenation(option, last);
 				last = range_syntree(ch, ch);
 				break;

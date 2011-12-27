@@ -36,6 +36,7 @@ void buffer_mark(struct buffer* buffer) {
 	list_clear(&buffer->chunks);
 }
 
+// Repeatedly try to write until write succeeds of an error occurs
 static intptr_t write_all(int fd, char* buffer,
 		uintptr_t begin, uintptr_t end) {
 	uintptr_t done = begin;
@@ -51,6 +52,7 @@ static intptr_t write_all(int fd, char* buffer,
 
 int_fast8_t buffer_print(struct buffer* buffer, bool print_current) {
 	struct list_node* node = buffer->chunks.head;
+	// print contents of all chunks
 	while (node) {
 		struct buffer_chunk* chunk = node->ptr;
 		intptr_t res = write_all(buffer->fd_out,
@@ -62,13 +64,19 @@ int_fast8_t buffer_print(struct buffer* buffer, bool print_current) {
 		node = node->next;
 	}
 	list_clear(&buffer->chunks);
+
+	// if there was no data read, return success
 	if (buffer->pos == -1) return 1;
+	// if we are done, return success
 	if (buffer->pos == 0 && !print_current) return 1;
+
 	uintptr_t end = buffer->pos+(print_current?1:0);
 	intptr_t res = write_all(buffer->fd_out,
 			buffer->current.data, buffer->mark, end);
 	if (res == -1) return -1;
 	else if ((uintptr_t)res != end) return 0;
+
+	// remove mark
 	buffer->mark = -1;
 	return 1;
 }

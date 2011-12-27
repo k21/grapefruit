@@ -4,6 +4,7 @@
 #include "dfa.h"
 #include "sim.h"
 
+// The cache is a binary tree, depth is equal to number of nfa nodes
 struct dfa_cache_level {
 	union {
 		struct dfa_cache_level* child[2];
@@ -33,15 +34,19 @@ static struct dfa_cache_level* new_level(uintptr_t depth,
 static struct dfa_state* new_state(bool* active, struct dfa_cache* cache) {
 	struct dfa_state* res = alloc(sizeof(struct dfa_state));
 	cache->mem_usage += sizeof(struct dfa_state);
+	// set all next states to unknown
 	uintptr_t i;
 	for (i = 0; i < EXT_ALPHABET_SIZE; ++i) {
 		res->edges[i] = 0;
 	}
+
+	// save copy of active to the new state
 	res->active = alloc(sizeof(bool)*cache->depth);
 	cache->mem_usage += sizeof(bool)*cache->depth;
 	for (i = 0; i < cache->depth; ++i) {
 		res->active[i] = active[i];
 	}
+
 	res->accept = res->active[cache->depth-1];
 	res->persistent = false;
 	return res;
@@ -79,6 +84,7 @@ static bool clear_level(struct dfa_cache_level* level, uintptr_t depth,
 		bool r0, r1;
 		r0 = clear_level(level->data.child[0], depth+1, cache);
 		r1 = clear_level(level->data.child[1], depth+1, cache);
+		// if both subtrees were freed, the whole tree can be freed
 		if (r0 && r1) {
 			free(level);
 			cache->mem_usage -= sizeof(struct dfa_cache_level);
@@ -92,6 +98,8 @@ static bool clear_level(struct dfa_cache_level* level, uintptr_t depth,
 	}
 }
 
+// Called to remove all non-persistent states from cache when its memory usage
+//     grows too much
 static void clear(struct dfa_cache* cache) {
 	bool r = clear_level(cache->root, 0, cache);
 	if (r) {
@@ -101,6 +109,7 @@ static void clear(struct dfa_cache* cache) {
 
 static struct dfa_state* get_impl(struct dfa_cache_level* level, bool* active,
 		uintptr_t depth, struct dfa_cache* cache) {
+	// if we are at the bottom level, return the state (optionally create it)
 	if (depth == cache->depth) {
 		struct dfa_state* dfa_state = level->data.state;
 		if (!dfa_state) {
@@ -109,6 +118,8 @@ static struct dfa_state* get_impl(struct dfa_cache_level* level, bool* active,
 		}
 		return dfa_state;
 	}
+
+	// continue recursively
 	bool next_active = active[depth];
 	struct dfa_cache_level* next = level->data.child[next_active];
 	if (!next) {
