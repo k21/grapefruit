@@ -61,8 +61,7 @@ int main(int argc, char** argv) {
 	free_tree(tree);
 
 	// initialize simulation state
-	sim_init(&state, nfa, count_matches,
-			whole_lines, invert_match);
+	sim_init(&state, nfa, invert_match);
 
 	// initialize buffer
 	uintptr_t buffer_size = 65536;

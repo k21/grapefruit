@@ -19,16 +19,16 @@ struct sim_state {
 	struct dfa_state* after_begin;
 	struct dfa_cache* cache;
 	bool* tmp;
-	bool count_matches, whole_lines, invert_match;
+	bool invert_match;
 };
 
 // Allocate and initialize sim_state
 struct sim_state* new_sim_state(struct nfa* nfa,
-		bool count_matches, bool whole_lines, bool invert_match);
+		bool invert_match);
 
 // Initialize already allocated sim_state
 void sim_init(struct sim_state* state, struct nfa* nfa,
-		bool count_matches, bool whole_lines, bool invert_match);
+		bool invert_match);
 
 // Compute next dfa_state based on current state and next character
 // It uses nfa to compute the next state

@@ -4,9 +4,9 @@
 #include "sim.h"
 
 struct sim_state* new_sim_state(struct nfa* nfa,
-		bool count_matches, bool whole_lines, bool invert_match) {
+		bool invert_match) {
 	struct sim_state* res = alloc(sizeof(struct sim_state));
-	sim_init(res, nfa, count_matches, whole_lines, invert_match);
+	sim_init(res, nfa, invert_match);
 	return res;
 }
 
@@ -35,13 +35,11 @@ static inline void sim_mark_active(struct nfa_node* node, bool* active,
 }
 
 void sim_init(struct sim_state* state, struct nfa* nfa,
-		bool count_matches, bool whole_lines, bool invert_match) {
+		bool invert_match) {
 	state->nfa = nfa;
 	state->cache = new_cache(nfa->node_count+1, 10*1024*1024);
 	//TODO make the cache memory limit customizable
 	state->tmp = alloc(sizeof(bool)*(nfa->node_count+1));
-	state->count_matches = count_matches;
-	state->whole_lines = whole_lines;
 	state->invert_match = invert_match;
 
 	uintptr_t i;
