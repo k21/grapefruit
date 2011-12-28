@@ -129,9 +129,9 @@ static struct nfa* repeat_tree(struct syntree* repeated,
 			res = concat_nfas(res, n);
 		}
 		--min;
-		if (max != -1) --max;
+		if (max != UNLIMITED) --max;
 	}
-	if (max == -1) {
+	if (max == UNLIMITED) {
 		// add infinite loop of repeated expression
 		struct nfa* optional = build_nfa_impl(repeated);
 

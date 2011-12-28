@@ -332,7 +332,7 @@ static uintptr_t custom_repetition(char* re, uintptr_t len, uintptr_t begin,
 		}
 		if (middle == end-1) {
 			// Upper limit not used, defaults to unlimited
-			*last = repetition(*last, min, -1);
+			*last = repetition(*last, min, UNLIMITED);
 			return end;
 		} else {
 			int_fast32_t max = parse_number(re, middle+1, end, limit);
