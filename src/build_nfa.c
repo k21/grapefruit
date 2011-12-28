@@ -148,10 +148,11 @@ static struct nfa* repeat_tree(struct syntree* repeated,
 		list_push_back(&exit_node->edges.list, exit_edge);
 		exit_node->edge_count = 2;
 
-		set_exits(&optional->exits, exit_node);
-		list_clear(&optional->exits);
 		list_push_back(&optional->nodes.list, exit_node);
 		optional->node_count += 1;
+
+		set_exits(&optional->exits, exit_node);
+		list_clear(&optional->exits);
 		list_push_back(&optional->exits, exit_edge);
 
 		if (!res) {
