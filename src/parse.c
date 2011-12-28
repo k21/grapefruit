@@ -370,7 +370,6 @@ static uintptr_t parse_impl(char* re, uintptr_t len, uintptr_t begin,
 				++i;
 				// recursively launch parsing of subexpression in parentheses
 				i = parse_impl(re, len, i, &last);
-				//TODO check for error
 				break;
 			case ')':
 				if (begin == 0) {
