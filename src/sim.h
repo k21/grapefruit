@@ -24,11 +24,11 @@ struct sim_state {
 
 // Allocate and initialize sim_state
 struct sim_state* new_sim_state(struct nfa* nfa,
-		bool invert_match);
+		bool invert_match, uintptr_t cache_mem_limit);
 
 // Initialize already allocated sim_state
 void sim_init(struct sim_state* state, struct nfa* nfa,
-		bool invert_match);
+		bool invert_match, uintptr_t cache_mem_limit);
 
 // Compute next dfa_state based on current state and next character
 // It uses nfa to compute the next state

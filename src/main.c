@@ -35,13 +35,30 @@ static void print_usage(char* prog_name) {
 	printf("Run '%s --help' to get more information\n", prog_name);
 }
 
+static uintptr_t parse_size_in_kb(char* str) {
+	uintptr_t max = UINTPTR_MAX / 1024;
+	uintptr_t res = 0;
+	uintptr_t i = 0;
+	while (str[i]) {
+		if (str[i] > '9' || str[i] < '0') return -1U;
+		res *= 10;
+		res += str[i]-'0';
+		if (res > max) return -1;
+		++i;
+	}
+	return res*1024;
+}
+
 static struct buffer buffer;
 static struct sim_state state;
+
+#define OPTION_CACHE_LIMIT 256
 
 bool invert_match = false;
 bool whole_lines = false;
 bool count_matches = false;
 int display_help = 0;
+uintptr_t cache_mem_limit = 10*1024*1024;
 
 int main(int argc, char** argv) {
 	// read all used flags
@@ -51,6 +68,7 @@ int main(int argc, char** argv) {
 			{"line-regexp",  no_argument, 0, 'x'},
 			{"count",        no_argument, 0, 'c'},
 			{"help",         no_argument, &display_help, 1},
+			{"cache-limit",  required_argument, 0, OPTION_CACHE_LIMIT},
 			{0, 0, 0, 0}
 		};
 		int option_index = 0;
@@ -60,6 +78,13 @@ int main(int argc, char** argv) {
 			case 'v': invert_match = true; break;
 			case 'x': whole_lines = true; break;
 			case 'c': count_matches = true; break;
+			case OPTION_CACHE_LIMIT:
+				cache_mem_limit = parse_size_in_kb(optarg);
+				if (cache_mem_limit == -1U) {
+					print_usage(argv[0]);
+					return 2;
+				}
+				break;
 			case 0: break;
 			default:
 				print_usage(argv[0]);
@@ -90,7 +115,7 @@ int main(int argc, char** argv) {
 	free_tree(tree);
 
 	// initialize simulation state
-	sim_init(&state, nfa, invert_match);
+	sim_init(&state, nfa, invert_match, cache_mem_limit);
 
 	// initialize buffer
 	uintptr_t buffer_size = 65536;
