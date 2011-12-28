@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 	// check if there is exactly one regular expression
 	if (optind != argc-1) {
 		printf("incorrect usage\n"); //TODO print usage / help
-		return 1;
+		return 2;
 	}
 
 	char* regex = argv[optind];
