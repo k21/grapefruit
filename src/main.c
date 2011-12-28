@@ -30,6 +30,11 @@ static char* help_message =
 "matched, exit status is 0, if no line matched, exit status is 1.\n"
 ;
 
+static void print_usage(char* prog_name) {
+	printf("Usage: %s [OPTION]... PATTERN\n", prog_name);
+	printf("Run '%s --help' to get more information\n", prog_name);
+}
+
 static struct buffer buffer;
 static struct sim_state state;
 
@@ -55,7 +60,10 @@ int main(int argc, char** argv) {
 			case 'v': invert_match = true; break;
 			case 'x': whole_lines = true; break;
 			case 'c': count_matches = true; break;
-			default: break;
+			case 0: break;
+			default:
+				print_usage(argv[0]);
+				return 2;
 		}
 	}
 
@@ -66,8 +74,7 @@ int main(int argc, char** argv) {
 
 	// check if there is exactly one regular expression
 	if (optind != argc-1) {
-		printf("Usage: %s [OPTION]... PATTERN\n", argv[0]);
-		printf("Run '%s --help' to get more information\n", argv[0]);
+		print_usage(argv[0]);
 		return 2;
 	}
 
