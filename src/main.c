@@ -15,21 +15,37 @@
 #include "syntree.h"
 #include "sim.h"
 
+static char* help_message =
+"Usage: %s [OPTION]... PATTERN\n"
+"Filter lines on standard input according to PATTERN.\n"
+"Pattern is a regular expression as described in user manual.\n"
+"\n"
+"Recognized options:\n"
+"  -x, --invert-match     PATTERN must match whole lines\n"
+"  -v, --line-regexp      output lines that did NOT match\n"
+"  -c, --count            do not print matched lines, only their count\n"
+"      --help             display this help message and exit\n"
+"\n"
+"If an error occurs, exit status is 2. Otherwise, if at least one line was\n"
+"matched, exit status is 0, if no line matched, exit status is 1.\n"
+;
+
 static struct buffer buffer;
 static struct sim_state state;
 
-int main(int argc, char** argv) {
-	// set default values to flags
-	bool invert_match = false;
-	bool whole_lines = false;
-	bool count_matches = false;
+bool invert_match = false;
+bool whole_lines = false;
+bool count_matches = false;
+int display_help = 0;
 
-	// read all flags used
+int main(int argc, char** argv) {
+	// read all used flags
 	while (1) {
 		static struct option long_options[] = {
 			{"invert-match", no_argument, 0, 'v'},
 			{"line-regexp",  no_argument, 0, 'x'},
 			{"count",        no_argument, 0, 'c'},
+			{"help",         no_argument, &display_help, 1},
 			{0, 0, 0, 0}
 		};
 		int option_index = 0;
@@ -43,9 +59,15 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	if (display_help) {
+		printf(help_message, argv[0]);
+		return 0;
+	}
+
 	// check if there is exactly one regular expression
 	if (optind != argc-1) {
-		printf("incorrect usage\n"); //TODO print usage / help
+		printf("Usage: %s [OPTION]... PATTERN\n", argv[0]);
+		printf("Run '%s --help' to get more information\n", argv[0]);
 		return 2;
 	}
 
