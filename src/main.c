@@ -31,8 +31,8 @@ static char* help_message =
 ;
 
 static void print_usage(char* prog_name) {
-	printf("Usage: %s [OPTION]... PATTERN\n", prog_name);
-	printf("Run '%s --help' to get more information\n", prog_name);
+	fprintf(stderr, "Usage: %s [OPTION]... PATTERN\n", prog_name);
+	fprintf(stderr, "Run '%s --help' to get more information\n", prog_name);
 }
 
 static uintptr_t parse_size_in_kb(char* str) {
