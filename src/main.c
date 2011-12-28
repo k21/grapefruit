@@ -25,6 +25,7 @@ static char* help_message =
 "  -v, --line-regexp      output lines that did NOT match\n"
 "  -c, --count            do not print matched lines, only their count\n"
 "      --help             display this help message and exit\n"
+"      --cache-limit=N    limit cache size to approximately N kB\n"
 "\n"
 "If an error occurs, exit status is 2. Otherwise, if at least one line was\n"
 "matched, exit status is 0, if no line matched, exit status is 1.\n"
