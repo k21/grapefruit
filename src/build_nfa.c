@@ -82,27 +82,19 @@ static struct nfa* concat_trees(struct syntree* t1, struct syntree* t2) {
 	return concat_nfas(n1, n2);
 }
 
-// Create alternation of nfas by creating an extra node and
-// pointing free edges from it to starting nodes of the two nfas
+// Create alternation of nfas by merging the start nodes
 static struct nfa* alter_nfas(struct nfa* n1, struct nfa* n2) {
 	struct nfa_node* start1 = start(n1);
 	struct nfa_node* start2 = start(n2);
 
-	struct nfa_edge* to1 = new_nfa_edge();
-	to1->destination = start1;
-	to1->min = EDGE_SPECIAL_PREFIX; to1->max = EDGE_FREE;
-	struct nfa_edge* to2 = new_nfa_edge();
-	to2->destination = start2;
-	to2->min = EDGE_SPECIAL_PREFIX; to2->max = EDGE_FREE;
+	list_join(&start1->edges.list, &start2->edges.list);
+	start1->edge_count += start2->edge_count;
+	free(start2);
 
-	struct nfa_node* new_start = new_nfa_node();
-	list_push_back(&new_start->edges.list, to1);
-	list_push_back(&new_start->edges.list, to2);
-	new_start->edge_count = 2;
-
+	list_pop_front(&n2->nodes.list);
 	list_join(&n1->nodes.list, &n2->nodes.list);
-	list_push_front(&n1->nodes.list, new_start);
-	n1->node_count += n2->node_count+1;
+	n1->node_count += n2->node_count-1;
+
 	list_join(&n1->exits, &n2->exits);
 
 	free(n2);
@@ -117,17 +109,13 @@ static struct nfa* alter_trees(struct syntree* t1, struct syntree* t2) {
 
 static struct nfa* repeat_tree(struct syntree* repeated,
 		int_fast16_t min, int_fast16_t max) {
-	if (max == 0) return new_empty_nfa();
+	struct nfa* res = new_empty_nfa();
+	if (max == 0) return res;
 
-	struct nfa* res = 0;
 	while (min > 1) {
 		// add the non-optional repeats
-		if (!res) {
-			res = build_nfa_impl(repeated);
-		} else {
-			struct nfa* n = build_nfa_impl(repeated);
-			res = concat_nfas(res, n);
-		}
+		struct nfa* n = build_nfa_impl(repeated);
+		res = concat_nfas(res, n);
 		--min;
 		if (max != UNLIMITED) --max;
 	}
@@ -155,11 +143,7 @@ static struct nfa* repeat_tree(struct syntree* repeated,
 		list_clear(&optional->exits);
 		list_push_back(&optional->exits, exit_edge);
 
-		if (!res) {
-			res = optional;
-		} else {
-			res = concat_nfas(res, optional);
-		}
+		res = concat_nfas(res, optional);
 	} else {
 		// add limited number of optional nfas
 		struct nfa* optional = build_nfa_impl(repeated);
@@ -169,18 +153,14 @@ static struct nfa* repeat_tree(struct syntree* repeated,
 			--max;
 		}
 
-		if (!res) {
-			res = optional;
-		} else {
-			res = concat_nfas(res, optional);
-		}
+		res = concat_nfas(res, optional);
 	}
 
-	if (min == 0 && res) {
+	if (min == 0) {
 		res = alter_nfas(res, new_empty_nfa());
 	}
 
-	return res ? res : new_empty_nfa();
+	return res;
 }
 
 // Recursively build nfa
