@@ -1,0 +1,17 @@
+If the directory with the package distribution does not contain the 'configure'
+file, you will need to run 'autoreconf -i'. autoreconf is a part of autotools.
+
+To compile Grapefruit:
+
+ * 'cd' into the directory with the package distribution
+ * Run './configure'
+ * Run 'make'
+
+If no errors have occurred, the program binary can be found in the folder src/.
+To install Grapefruit after it has been compiled:
+
+ * Run 'make install'
+
+If you are interested in Grapefruit development, the recommended way is to use
+gcc to compile it and instead of running './configure' in the second step, run
+'./configure-gcc-dev'.
