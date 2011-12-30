@@ -15,6 +15,8 @@
 #include "syntree.h"
 #include "sim.h"
 
+#include "config.h"
+
 static char* help_message =
 "Usage: %s [OPTION]... PATTERN\n"
 "Filter lines on standard input according to PATTERN.\n"
@@ -29,6 +31,26 @@ static char* help_message =
 "\n"
 "If an error occurs, exit status is 2. Otherwise, if at least one line was\n"
 "matched, exit status is 0, if no line matched, exit status is 1.\n"
+;
+
+static char* version_message =
+"Grapefruit " VERSION "\n"
+"Copyright (C) 2011-2012 Jakub Zika\n"
+"This program is free software: you can redistribute it and/or modify\n"
+"it under the terms of the GNU General Public License as published by\n"
+"the Free Software Foundation, either version 3 of the License, or\n"
+"(at your option) any later version.\n"
+"\n"
+"This program is distributed in the hope that it will be useful,\n"
+"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+"GNU General Public License for more details.\n"
+"\n"
+"You should have received a copy of the GNU General Public License\n"
+"along with this program.  If not, see <http://www.gnu.org/licenses/>.\n"
+"License: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
+"This is free software: you are free to change and redistribute it.\n"
+"There is NO WARRANTY, to the extent permitted by law.\n"
 ;
 
 static void print_usage(char* prog_name) {
@@ -59,6 +81,7 @@ bool invert_match = false;
 bool whole_lines = false;
 bool count_matches = false;
 int display_help = 0;
+bool display_version = false;
 uintptr_t cache_mem_limit = 10*1024*1024;
 
 int main(int argc, char** argv) {
@@ -69,11 +92,12 @@ int main(int argc, char** argv) {
 			{"line-regexp",  no_argument, 0, 'x'},
 			{"count",        no_argument, 0, 'c'},
 			{"help",         no_argument, &display_help, 1},
+			{"version",      no_argument, 0, 'V'},
 			{"cache-limit",  required_argument, 0, OPTION_CACHE_LIMIT},
 			{0, 0, 0, 0}
 		};
 		int option_index = 0;
-		int c = getopt_long(argc, argv, "vxc", long_options, &option_index);
+		int c = getopt_long(argc, argv, "vxcV", long_options, &option_index);
 		if (c == -1) break;
 		switch (c) {
 			case 'v': invert_match = true; break;
@@ -86,6 +110,9 @@ int main(int argc, char** argv) {
 					return 2;
 				}
 				break;
+			case 'V':
+				display_version = true;
+				break;
 			case 0: break;
 			default:
 				print_usage(argv[0]);
@@ -95,6 +122,11 @@ int main(int argc, char** argv) {
 
 	if (display_help) {
 		printf(help_message, argv[0]);
+		return 0;
+	}
+
+	if (display_version) {
+		printf(version_message);
 		return 0;
 	}
 
