@@ -135,7 +135,7 @@ int main(int argc, char** argv) {
 		if (ch == '\n') {
 			// handle the end of line here
 			new_line = true;
-			// simulate the special lline end character
+			// simulate the special line end character
 			if (!state.dfa_state->accept) sim_step(&state, CHAR_INPUT_END);
 			if (sim_is_match(&state)) {
 				// the last line matched, either print it or count it
