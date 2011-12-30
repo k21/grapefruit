@@ -21,16 +21,18 @@ static char* help_message =
 "Usage: %s [OPTION]... PATTERN\n"
 "Filter lines on standard input according to PATTERN.\n"
 "Pattern is a regular expression as described in user manual.\n"
+"If no options are given, line is selected if its part matches the PATTERN\n"
+"and the selected lines are printed to standard output.\n"
 "\n"
 "Recognized options:\n"
-"  -x, --invert-match     PATTERN must match whole lines\n"
-"  -v, --line-regexp      output lines that did NOT match\n"
-"  -c, --count            do not print matched lines, only their count\n"
+"  -x, --invert-match     PATTERN must match whole line\n"
+"  -v, --line-regexp      select lines that did NOT match\n"
+"  -c, --count            do not print selected lines, only their count\n"
 "      --help             display this help message and exit\n"
 "      --cache-limit=N    limit cache size to approximately N kB\n"
 "\n"
 "If an error occurs, exit status is 2. Otherwise, if at least one line was\n"
-"matched, exit status is 0, if no line matched, exit status is 1.\n"
+"selected, exit status is 0, if no line was selected, exit status is 1.\n"
 ;
 
 static char* version_message =
