@@ -33,6 +33,9 @@ static char* help_message =
 "\n"
 "If an error occurs, exit status is 2. Otherwise, if at least one line was\n"
 "selected, exit status is 0, if no line was selected, exit status is 1.\n"
+"\n"
+"Grapefruit repository at Github: <http://github.com/k21/grapefruit>.\n"
+"Report bugs at <http://github.com/k21/grapefruit/issues>.\n"
 ;
 
 static char* version_message =
